@@ -4,7 +4,7 @@ webpackJsonp([1,5],{
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(405);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(406);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _Entity; });
 
 var _Entity = (function () {
@@ -83,7 +83,7 @@ var _Entity = (function () {
     _Entity.idcount = 0;
     return _Entity;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/_entity.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/_entity.js.map
 
 /***/ }),
 
@@ -109,7 +109,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(383);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(404);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(418);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(419);
 
 
 
@@ -118,7 +118,7 @@ if (__WEBPACK_IMPORTED_MODULE_3__environments_environment__["a" /* environment *
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["a" /* enableProdMode */])();
 }
 __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__["a" /* platformBrowserDynamic */])().bootstrapModule(__WEBPACK_IMPORTED_MODULE_2__app_app_module__["a" /* AppModule */]);
-//# sourceMappingURL=D:/dev/_game_01-06/src/main.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/main.js.map
 
 /***/ }),
 
@@ -127,8 +127,8 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(413);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(406);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(414);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(407);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -174,16 +174,16 @@ var AppComponent = (function () {
     AppComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["U" /* Component */])({
             selector: 'app-root',
-            template: __webpack_require__(476),
+            template: __webpack_require__(477),
             providers: [__WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */]],
-            styles: [__webpack_require__(472)]
+            styles: [__webpack_require__(473)]
         }), 
         __metadata('design:paramtypes', [(typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* ElementRef */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* ElementRef */]) === 'function' && _a) || Object, (typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */]) === 'function' && _b) || Object])
     ], AppComponent);
     return AppComponent;
     var _a, _b;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/app.component.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/app.component.js.map
 
 /***/ }),
 
@@ -195,7 +195,7 @@ var AppComponent = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(374);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(162);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(412);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(413);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(403);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -233,11 +233,74 @@ var AppModule = (function () {
     ], AppModule);
     return AppModule;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/app.module.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/app.module.js.map
 
 /***/ }),
 
 /***/ 405:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Bullet; });
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var Bullet = (function (_super) {
+    __extends(Bullet, _super);
+    function Bullet(game, key) {
+        _super.call(this, game, 0, 0, key);
+        this.texture.baseTexture.scaleMode = PIXI.scaleModes.NEAREST;
+        this.anchor.set(0.5);
+        this.checkWorldBounds = true;
+        this.outOfBoundsKill = true;
+        this.exists = false;
+        this.visible = false;
+        this.tracking = false;
+        this.scaleSpeed = 0;
+    }
+    Bullet.prototype.fire = function (x, y, angle, speed, gx, gy, distance) {
+        gx = gx || 0;
+        gy = gy || 0;
+        this.reset(x, y);
+        this.scale.set(1);
+        this.distance = distance;
+        this.sx = x;
+        this.sy = y;
+        this.game.physics.arcade.velocityFromAngle(angle, speed, this.body.velocity);
+        this.angle = angle;
+        this.body.gravity.set(gx, gy);
+        this.exists = true;
+        this.visible = true;
+    };
+    Bullet.prototype.update = function () {
+        if (!this.exists) {
+            return;
+        }
+        var dx = Math.abs(this.sx - this.x);
+        var dy = Math.abs(this.sy - this.y);
+        var currentDistance = (dx + dy);
+        console.log('currentDistance', currentDistance);
+        if (currentDistance >= this.distance) {
+            this.exists = false;
+            this.visible = false;
+        }
+        if (this.tracking) {
+            this.rotation = Math.atan2(this.body.velocity.y, this.body.velocity.x);
+        }
+        if (this.scaleSpeed > 0) {
+            this.scale.x += this.scaleSpeed;
+            this.scale.y += this.scaleSpeed;
+        }
+    };
+    return Bullet;
+}(Phaser.Sprite));
+//# sourceMappingURL=C:/taff/_game_01-06/src/bullet.js.map
+
+/***/ }),
+
+/***/ 406:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -247,18 +310,18 @@ var EntityType;
     EntityType[EntityType["human"] = 0] = "human";
     EntityType[EntityType["zombie"] = 1] = "zombie";
 })(EntityType || (EntityType = {}));
-//# sourceMappingURL=D:/dev/_game_01-06/src/entity.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/entity.js.map
 
 /***/ }),
 
-/***/ 406:
+/***/ 407:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(408);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(411);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(407);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(415);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(409);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(412);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(408);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(416);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Game; });
 
 
@@ -269,6 +332,8 @@ var EntityType;
 // pendant le tour de l'IA, on désactive le clic
 //pousser des trucs pour se cacher des zomblards
 //le vent pour l'odeur ...
+// faire des packs de zombies (à agreger par rapport à la distance)
+//global revolver
 var Game = (function () {
     function Game(gameService) {
         var _this = this;
@@ -486,11 +551,11 @@ var Game = (function () {
     };
     return Game;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/game.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/game.js.map
 
 /***/ }),
 
-/***/ 407:
+/***/ 408:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -904,16 +969,16 @@ var GameMap = (function () {
     };
     return GameMap;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/map.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/map.js.map
 
 /***/ }),
 
-/***/ 408:
+/***/ 409:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(276);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(410);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(411);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Player; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -954,15 +1019,15 @@ var Player = (function (_super) {
     };
     return Player;
 }(__WEBPACK_IMPORTED_MODULE_0_app_game_entity__["a" /* _Entity */]));
-//# sourceMappingURL=D:/dev/_game_01-06/src/player.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/player.js.map
 
 /***/ }),
 
-/***/ 409:
+/***/ 410:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__ = __webpack_require__(417);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__ = __webpack_require__(418);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return VisibilitySprite; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -982,18 +1047,20 @@ var VisibilitySprite = (function (_super) {
     };
     return VisibilitySprite;
 }(__WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__["a" /* Spawnable */]));
-//# sourceMappingURL=D:/dev/_game_01-06/src/visibilitySprite.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/visibilitySprite.js.map
 
 /***/ }),
 
-/***/ 410:
+/***/ 411:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(191);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(405);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(191);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return WEAPONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WeaponPool; });
+
 
 // prevoir une compétence pour utiliser les machines guns debout
 var WEAPONS;
@@ -1014,13 +1081,18 @@ var WEAPONS;
     WEAPONS[WEAPONS["HAND_GRENADE"] = 12] = "HAND_GRENADE";
 })(WEAPONS || (WEAPONS = {}));
 var WeaponImpl = (function () {
-    function WeaponImpl(data, map) {
+    function WeaponImpl(data, map, key) {
         this.data = data;
         this.map = map;
         this.isJammed = false;
         this.rnd = map.rnd;
+        this.bulletGroup = this.map.engine.addGroup(data.name);
+        for (var i = 0; i < 64; i++) {
+            this.bulletGroup.add(new __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__["a" /* Bullet */](this.map.engine.phaserGame, 'bullet6'), true);
+        }
     }
     WeaponImpl.prototype.fire = function (sourceEntity, targetEntity) {
+        this.bulletSpeed = 700;
         if (this.isJammed) {
             return;
         }
@@ -1063,7 +1135,7 @@ var WeaponImpl = (function () {
         var sourceSquare = sourceEntity.square, 
         // les y sont inversés, il faut donc inverser l'angle.
         baseAngle = -Math.atan2(targetEntity.square.y - sourceSquare.y, targetEntity.square.x - sourceSquare.x) * (180 / Math.PI), startAngle = baseAngle + (this.data.spreadAngle / 2), angleStep = this.data.spreadAngle / this.data.projectileByShot;
-        __WEBPACK_IMPORTED_MODULE_0_lodash__["times"](this.data.projectileByShot, function (index) {
+        __WEBPACK_IMPORTED_MODULE_1_lodash__["times"](this.data.projectileByShot, function (index) {
             _this.processSingleBullet(sourceEntity, sourceSquare, startAngle - (index * angleStep));
         });
     };
@@ -1073,10 +1145,10 @@ var WeaponImpl = (function () {
     //todo enregistrer tous les dommages d'une action et résoudre ça à la fin.
     WeaponImpl.prototype.processSingleBullet = function (sourceEntity, sourceSquare, currentAngle) {
         var _this = this;
-        var targetX = Math.round(Math.cos(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.x, targetY = -Math.round(Math.sin(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.y, targetSquare = this.map.getSquare(targetX, targetY), lineOfSight = this.map.BresenhamLine(sourceSquare, targetSquare), entitiesOnLineOfSight = __WEBPACK_IMPORTED_MODULE_0_lodash__(lineOfSight)
+        var targetX = Math.round(Math.cos(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.x, targetY = -Math.round(Math.sin(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.y, targetSquare = this.map.getSquare(targetX, targetY), lineOfSight = this.map.BresenhamLine(sourceSquare, targetSquare), entitiesOnLineOfSight = __WEBPACK_IMPORTED_MODULE_1_lodash__(lineOfSight)
             .tail()
             .filter(function (square) { return square.entity; }).map(function (square) { return square.entity; })
-            .value(), entityTouched = 0;
+            .value(), lastPositionTouched = null, entityTouched = 0;
         console.log('bullet', currentAngle, targetX, targetY);
         entitiesOnLineOfSight.forEach(function (entity) {
             var damageModifier = 1; //plus tard on aura les modifieurs source et cible
@@ -1094,7 +1166,21 @@ var WeaponImpl = (function () {
             }
             var damage = damageModifier * _this.getDamage();
             entity.touched(sourceEntity, damage);
+            lastPositionTouched = entity.position;
         });
+        console.log('fire bullet ', currentAngle);
+        var x = sourceEntity.position.x + 10;
+        var y = sourceEntity.position.y + 10;
+        var currentDistance = 0;
+        if (!lastPositionTouched) {
+            currentDistance = this.data.maxRange * 32;
+        }
+        else {
+            var dx = Math.abs(x - lastPositionTouched.x);
+            var dy = Math.abs(y - lastPositionTouched.y);
+            currentDistance = (dx + dy);
+        }
+        this.bulletGroup.getFirstExists(false).fire(x, y, -currentAngle, this.bulletSpeed, 0, 0, currentDistance);
     };
     WeaponImpl.prototype.reload = function () {
         this.data.currentAmmo = this.data.maxAmmo;
@@ -1128,6 +1214,7 @@ var WeaponPool = (function () {
         switch (weapons) {
             case WEAPONS.NINEMM:
                 return new WeaponImpl({
+                    name: 'NINEMM',
                     minRange: 0,
                     maxRange: 9,
                     minDamage: 1,
@@ -1142,9 +1229,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.SHOOTGUN:
                 return new WeaponImpl({
+                    name: 'SHOOTGUN',
                     minRange: 0,
                     maxRange: 5,
                     minDamage: 1,
@@ -1159,9 +1247,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 6,
                     isRanged: false
-                }, map);
+                }, map, 'bullet8');
             case WEAPONS.PIPE:
                 return new WeaponImpl({
+                    name: 'PIPE',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1176,9 +1265,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.AXE:
                 return new WeaponImpl({
+                    name: 'AXE',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1193,9 +1283,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.PUNCH:
                 return new WeaponImpl({
+                    name: 'PUNCH',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1210,9 +1301,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.BAT:
                 return new WeaponImpl({
+                    name: 'BAT',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1227,9 +1319,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.NAILBAT:
                 return new WeaponImpl({
+                    name: 'NAILBAT',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1244,9 +1337,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.KNIFE:
                 return new WeaponImpl({
+                    name: 'KNIFE',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1261,9 +1355,10 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             case WEAPONS.KATANA:
                 return new WeaponImpl({
+                    name: 'KATANA',
                     minRange: 0,
                     maxRange: 0,
                     minDamage: 0,
@@ -1278,18 +1373,18 @@ var WeaponPool = (function () {
                     damageRange: 0,
                     projectileByShot: 1,
                     isRanged: false
-                }, map);
+                }, map, 'bullet6');
             default:
                 break;
         }
     };
     return WeaponPool;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/weapon.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/weapon.js.map
 
 /***/ }),
 
-/***/ 411:
+/***/ 412:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1458,11 +1553,11 @@ var Zombie = (function (_super) {
     };
     return Zombie;
 }(__WEBPACK_IMPORTED_MODULE_0_app_game_entity__["a" /* _Entity */]));
-//# sourceMappingURL=D:/dev/_game_01-06/src/zombie.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/zombie.js.map
 
 /***/ }),
 
-/***/ 412:
+/***/ 413:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1505,17 +1600,17 @@ Copyright 2017 Google Inc. All Rights Reserved.
 Use of this source code is governed by an MIT-style license that
 can be found in the LICENSE file at http://angular.io/license
 */ 
-//# sourceMappingURL=D:/dev/_game_01-06/src/default-request-options.service.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/default-request-options.service.js.map
 
 /***/ }),
 
-/***/ 413:
+/***/ 414:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(162);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__ = __webpack_require__(478);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__ = __webpack_require__(479);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GameService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1602,11 +1697,11 @@ var GameService = (function () {
     return GameService;
     var _a;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/game.service.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/game.service.js.map
 
 /***/ }),
 
-/***/ 414:
+/***/ 415:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1706,19 +1801,19 @@ var DelayedAnimation = (function (_super) {
     return DelayedAnimation;
 }(Phaser.Animation));
 /* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
-//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/delayedAnimation.js.map
 
 /***/ }),
 
-/***/ 415:
+/***/ 416:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(416);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(409);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(414);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(417);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(410);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(415);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Engine; });
 
 
@@ -1816,6 +1911,8 @@ var Engine = (function () {
         this.phaserGame.load.audio('MechDrone1', ['assets/sounds/MechDrone1.mp3']);
         this.phaserGame.load.audio('soundeffect', ['assets/sounds/soundeffect.ogg']);
         this.phaserGame.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        this.phaserGame.load.image('bullet8', 'assets/sprites/bullet8.png');
+        this.phaserGame.load.image('bullet6', 'assets/sprites/bullet6.png');
     };
     Engine.prototype.create = function (mapResponse) {
         var game = this.phaserGame;
@@ -2016,6 +2113,9 @@ var Engine = (function () {
         var game = this.phaserGame, camera = game.camera;
         return (camera.bounds.bottom) - (camera.height / 2);
     };
+    Engine.prototype.addGroup = function (groupName) {
+        return this.phaserGame.add.group(this.phaserGame.world, groupName, false, true, Phaser.Physics.ARCADE);
+    };
     Engine.prototype.updateCamera = function () {
         var game = this.phaserGame, camera = game.camera, activePointer = game.input.activePointer, cameraPosition = camera.position, livezone = 32, cameraStep = 16;
         if (activePointer.x <= livezone) {
@@ -2121,11 +2221,11 @@ var Engine = (function () {
     };
     return Engine;
 }());
-//# sourceMappingURL=D:/dev/_game_01-06/src/engine.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/engine.js.map
 
 /***/ }),
 
-/***/ 416:
+/***/ 417:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2165,11 +2265,11 @@ var Pool = (function (_super) {
     };
     return Pool;
 }(Phaser.Group));
-//# sourceMappingURL=D:/dev/_game_01-06/src/pool.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/pool.js.map
 
 /***/ }),
 
-/***/ 417:
+/***/ 418:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2192,11 +2292,11 @@ var Spawnable = (function (_super) {
     };
     return Spawnable;
 }(Phaser.Sprite));
-//# sourceMappingURL=D:/dev/_game_01-06/src/spawnable.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/spawnable.js.map
 
 /***/ }),
 
-/***/ 418:
+/***/ 419:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2208,11 +2308,11 @@ var Spawnable = (function (_super) {
 var environment = {
     production: false
 };
-//# sourceMappingURL=D:/dev/_game_01-06/src/environment.js.map
+//# sourceMappingURL=C:/taff/_game_01-06/src/environment.js.map
 
 /***/ }),
 
-/***/ 472:
+/***/ 473:
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(190)();
@@ -2220,7 +2320,7 @@ exports = module.exports = __webpack_require__(190)();
 
 
 // module
-exports.push([module.i, ".game__canvas__background{\n    position: relative;\n}\n.game__canvas__sprites{\n    position: absolute;\n    top: 0;\n    left: 0;\n}\n.game__canvas__background,\n.game__canvas__sprites{\n     -webkit-transform: translateZ(0);\n     transform: translateZ(0);\n}", ""]);
+exports.push([module.i, ".game__canvas__background{\r\n    position: relative;\r\n}\r\n.game__canvas__sprites{\r\n    position: absolute;\r\n    top: 0;\r\n    left: 0;\r\n}\r\n.game__canvas__background,\r\n.game__canvas__sprites{\r\n     -webkit-transform: translateZ(0);\r\n     transform: translateZ(0);\r\n}", ""]);
 
 // exports
 
@@ -2230,14 +2330,14 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 476:
+/***/ 477:
 /***/ (function(module, exports) {
 
-module.exports = "<div style=\"position: relative\">\n    <div id=\"game\" class=\"game__canvas__sprites\"></div>\n</div>"
+module.exports = "<div style=\"position: relative\">\r\n    <div id=\"game\" class=\"game__canvas__sprites\"></div>\r\n</div>"
 
 /***/ }),
 
-/***/ 492:
+/***/ 493:
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports = __webpack_require__(294);
@@ -2245,5 +2345,5 @@ module.exports = __webpack_require__(294);
 
 /***/ })
 
-},[492]);
+},[493]);
 //# sourceMappingURL=main.bundle.js.map
