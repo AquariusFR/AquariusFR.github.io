@@ -1878,48 +1878,32 @@ var DelayedAnimation = (function (_super) {
 
 
 
-//http://rpgmaker.su-downloads/%D0%B4%D0%BE%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F/238-pop-horror-city-character-pack-1-a
-//https://forums.rpg-akerweb.com/index.php?threads/pop-freebies.45329/
+// http://rpgmaker.su-downloads/%D0%B4%D0%BE%D0%BF%D0%BE%D0%BB%D0%BD%D0%B5%D0%BD%D0%B8%D1%8F/238-pop-horror-city-character-pack-1-a
+// https://forums.rpg-akerweb.com/index.php?threads/pop-freebies.45329/
 // https://www.leshylabs.com/apps/sstool/
 /*
-<div class="frame ctooltip">
-  
-    <div style="background: #225378"></div>
-  
-    <div style="background: #1695A3"></div>
-  
-    <div style="background: #ACF0F2"></div>
-  
-    <div style="background: #F3FFE2"></div>
-  
-    <div style="background: #EB7F00"></div>
-  
-  
-</div>
-<div class="frame ctooltip">
-  
-    <div style="background: #DC3522"></div>
-  
-    <div style="background: #D9CB9E"></div>
-  
-    <div style="background: #374140"></div>
-  
-    <div style="background: #2A2C2B"></div>
-  
-    <div style="background: #1E1E20"></div>
-  </div>
+#225378
+#1695A3
+#ACF0F2
+#F3FFE2
+#EB7F00
+#DC3522
+#D9CB9E
+#374140
+#2A2C2B
+#1E1E20
  */
 var Engine = (function () {
     function Engine(mapName, gameService) {
         var _this = this;
         this.gameService = gameService;
+        this.mapVisibleTileCount = new Map();
+        this.mapVisibleTile = new Map();
         this.horizontalScroll = true;
         this.verticalScroll = true;
         this.kineticMovement = true;
         this.speed = 300;
         this.debug = true;
-        this.mapVisibleTileCount = new Map();
-        this.mapVisibleTile = new Map();
         this.overTimer = {
             key: '',
             time: -1,
@@ -1977,10 +1961,12 @@ var Engine = (function () {
         var game = this.phaserGame;
         var MechDrone1 = game.add.audio('MechDrone1', 1, true);
         var soundeffect = game.add.audio('soundeffect', 0.1, true);
-        this.gamegroup = game.add.group();
+        // il faut ordonnancer les groups par ordre d'apparition
+        this.tileGroup = game.add.group();
         this.rangegroup = game.add.group();
         this.visiongroup = game.add.group();
-        var gamegroup = this.gamegroup;
+        this.ihmGroup = game.add.group();
+        this.gamegroup = game.add.group();
         MechDrone1.play();
         MechDrone1.volume = 0.5;
         soundeffect.volume = 0;
@@ -1992,7 +1978,7 @@ var Engine = (function () {
         soundeffect.addMarker('grunt', 0, 0.570);
         this.soundeffect = soundeffect;
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        var createdMap = this.gameService.create(mapResponse, game, this.gamegroup);
+        var createdMap = this.gameService.create(mapResponse, game, this.tileGroup);
         var collisionLayer = createdMap.layers.get('collisions');
         this.map = createdMap.map;
         this.tileMap = createdMap.tileMap;
@@ -2009,12 +1995,12 @@ var Engine = (function () {
         };
         this.visibleMarkerPool = new __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__["a" /* Pool */](game, __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__["a" /* VisibilitySprite */], 200, 'visibleMarker');
         this.marker = game.add.sprite(0, 0, 'markers');
-        gamegroup.add(this.marker);
+        this.ihmGroup.add(this.marker);
         this.marker.animations.add("blink", ["marker/blink1", "marker/blink2"], 5, true);
         this.marker.play("blink");
         game.physics.enable(this.marker, Phaser.Physics.ARCADE);
         this.glow = game.add.sprite(-100, -100, 'markers');
-        gamegroup.add(this.glow);
+        this.ihmGroup.add(this.glow);
         this.glow.animations.add("glow", ["marker/active_entity"], 5, true);
         this.glow.play("glow");
         game.physics.enable(this.glow, Phaser.Physics.ARCADE);
@@ -2024,9 +2010,9 @@ var Engine = (function () {
         if (this.debug) {
             this.text = this.phaserGame.add.text(-100, -100, '', null);
         }
-        this.o.next('ok');
         //this.gamegroup.scale.x = 2;
         //this.gamegroup.scale.y = 2;
+        this.o.next('ok');
     };
     Engine.prototype.removeAllAccessibleTiles = function () {
         this.rangegroup.removeAll();
@@ -2084,7 +2070,6 @@ var Engine = (function () {
                 _this.mapVisibleTileCount.set(tileKey, count + 1);
             }
         });
-        //console.timeEnd("addVisibleTiles");
     };
     Engine.prototype.createHuman = function (position) {
         var human = this.phaserGame.add.sprite(position.x, position.y - 32, 'heroes-sprites');
@@ -2285,6 +2270,7 @@ var Engine = (function () {
         this.setMarker();
         this.updateCamera();
         this.handlerKeyBoard();
+        this.gamegroup.sort('y', Phaser.Group.SORT_ASCENDING);
     };
     return Engine;
 }());
