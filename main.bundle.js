@@ -785,6 +785,10 @@ var Game = (function () {
         }
         this.nextCharacter();
     };
+    Game.prototype.showPlayerTurnScreen = function () {
+    };
+    Game.prototype.showZombieTurnScreen = function () {
+    };
     // une entité a été ciblé
     Game.prototype.targeted = function (target) {
         if (this.currentEntity.id === target.id) {
@@ -863,15 +867,18 @@ var Game = (function () {
             if (!this.map.canEntityGoToTarget(this.currentEntity, target)) {
                 return;
             }
+            this.engine.followEntity(this.currentEntity);
             this.map.moveEntityAtPoint(this.currentEntity, target, function () {
                 _this.currentEntity.updateAccessibleTiles = true;
                 _this.currentEntity.targetSquare = _this.map.getSquareAtPoint(target);
                 _this.showAccessibleTilesByPlayer();
                 _this.nextAction();
                 _this.ticking = false;
+                _this.engine.unfollowEntity();
             }, function (error) {
                 console.log('sorry', error);
                 _this.ticking = false;
+                _this.engine.unfollowEntity();
             });
             this.ticking = true;
         }
@@ -880,17 +887,20 @@ var Game = (function () {
         var _this = this;
         if (this.currentTeamId === this.zombieTeamId) {
             console.time(this.currentTeamId + '/' + this.currentEntity.id + ' zombie play');
+            this.engine.followEntity(this.currentEntity);
             this.zombieTeam[this.currentIndex].play(function () {
                 console.timeEnd(_this.currentTeamId + '/' + _this.currentEntity.id + ' zombie play');
                 console.timeEnd(_this.currentTeamId + '/' + _this.currentEntity.id + ' nextAction');
                 console.time(_this.currentTeamId + '/' + _this.currentEntity.id + ' timeout');
                 setTimeout(function () {
                     console.timeEnd(_this.currentTeamId + '/' + _this.currentEntity.id + ' timeout');
+                    _this.engine.unfollowEntity();
                     _this.nextAction();
                 }, 300);
             });
         }
         else {
+            this.engine.focusOnEntity(this.currentEntity);
             if (this.currentEntity.currentAction === 0) {
                 this.showAccessibleTilesByPlayer();
                 console.timeEnd(this.currentTeamId + '/' + this.currentEntity.id + ' nextAction');
@@ -2013,6 +2023,18 @@ var Engine = (function () {
         //this.gamegroup.scale.x = 2;
         //this.gamegroup.scale.y = 2;
         this.o.next('ok');
+    };
+    Engine.prototype.focusOnEntity = function (entity) {
+        this.phaserGame.camera.focusOn(entity.sprite);
+        return this;
+    };
+    Engine.prototype.followEntity = function (entity) {
+        this.phaserGame.camera.follow(entity.sprite, 0.1, 0.1);
+        return this;
+    };
+    Engine.prototype.unfollowEntity = function () {
+        this.phaserGame.camera.unfollow();
+        return this;
     };
     Engine.prototype.removeAllAccessibleTiles = function () {
         this.rangegroup.removeAll();
