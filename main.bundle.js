@@ -4,14 +4,18 @@ webpackJsonp([1,5],{
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(406);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(407);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _Entity; });
+
 
 var _Entity = (function () {
     function _Entity(engine, position) {
         this.angle = 90;
         this.type = __WEBPACK_IMPORTED_MODULE_0_app_game_entity__["a" /* EntityType */].human;
         this.weapons = [];
+        this.selectedWeaponIndex = 0;
         this.engine = engine;
         this.position = position;
         this.id = _Entity.idcount++;
@@ -67,9 +71,6 @@ var _Entity = (function () {
         this.sprite.play('stand-down');
         return this;
     };
-    _Entity.prototype.touched = function (sourceEntity, damage) {
-        return this;
-    };
     _Entity.prototype.attack = function (target) {
         this.updateDirection(this.position, target.position);
         return this;
@@ -80,6 +81,17 @@ var _Entity = (function () {
         this.engine.moveTo(this.sprite, this.position.x, this.position.y, callback);
         return this;
     };
+    _Entity.prototype.touched = function (sourceEntity, damage) {
+        return this;
+    };
+    _Entity.prototype.die = function (sourceEntity) {
+        this.sprite.alive = false;
+        this.sprite.visible = false;
+        this.sprite.animations.stop();
+        var index = __WEBPACK_IMPORTED_MODULE_1_lodash__(this.team).remove(['id', this.id]).value();
+        this.game.setDead(this, sourceEntity);
+        return this;
+    };
     _Entity.idcount = 0;
     return _Entity;
 }());
@@ -87,7 +99,355 @@ var _Entity = (function () {
 
 /***/ }),
 
-/***/ 293:
+/***/ 277:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(406);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WEAPONS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return WeaponPool; });
+
+
+// prevoir une compétence pour utiliser les machines guns debout
+var WEAPONS;
+(function (WEAPONS) {
+    WEAPONS[WEAPONS["NINEMM"] = 0] = "NINEMM";
+    WEAPONS[WEAPONS["SHOOTGUN"] = 1] = "SHOOTGUN";
+    WEAPONS[WEAPONS["AR15"] = 2] = "AR15";
+    //Ruger No. 1 Varminter K1-V-BBZ
+    WEAPONS[WEAPONS["RUGER_K1"] = 3] = "RUGER_K1";
+    WEAPONS[WEAPONS["BLASER_R8"] = 4] = "BLASER_R8";
+    WEAPONS[WEAPONS["PIPE"] = 5] = "PIPE";
+    WEAPONS[WEAPONS["AXE"] = 6] = "AXE";
+    WEAPONS[WEAPONS["PUNCH"] = 7] = "PUNCH";
+    WEAPONS[WEAPONS["BAT"] = 8] = "BAT";
+    WEAPONS[WEAPONS["NAILBAT"] = 9] = "NAILBAT";
+    WEAPONS[WEAPONS["KNIFE"] = 10] = "KNIFE";
+    WEAPONS[WEAPONS["KATANA"] = 11] = "KATANA";
+    WEAPONS[WEAPONS["HAND_GRENADE"] = 12] = "HAND_GRENADE";
+})(WEAPONS || (WEAPONS = {}));
+var WeaponImpl = (function () {
+    function WeaponImpl(data, game, key) {
+        this.data = data;
+        this.game = game;
+        this.isJammed = false;
+        this.rnd = this.game.engine.phaserGame.rnd;
+        this.bulletGroup = this.game.engine.addGroup(data.name);
+        for (var i = 0; i < 64; i++) {
+            this.bulletGroup.add(new __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__["a" /* Bullet */](this.game.engine.phaserGame, 'bullet6'), true);
+        }
+    }
+    WeaponImpl.prototype.fire = function (sourceEntity, targetEntity) {
+        this.bulletSpeed = 700;
+        if (this.isJammed) {
+            return;
+        }
+        if (this.data.isRanged) {
+            if (this.data.currentAmmo > 0) {
+                this.data.currentAmmo--;
+            }
+            else {
+                //you should reload
+                return;
+            }
+        }
+        if (this.checkJam()) {
+            return;
+        }
+        if (this.data.spreadAngle == 0) {
+            var touchedEntity = this.shootSingleBullet(sourceEntity, targetEntity);
+            var x = sourceEntity.position.x + 10;
+            var y = sourceEntity.position.y + 10;
+            var currentDistance = 0;
+            if (!touchedEntity) {
+                currentDistance = this.data.maxRange * 32;
+            }
+            else {
+                var dx = Math.abs(x - touchedEntity.position.x);
+                var dy = Math.abs(y - touchedEntity.position.y);
+                currentDistance = (dx + dy);
+            }
+            var baseAngle = -Math.atan2(targetEntity.square.y - sourceEntity.square.y, targetEntity.square.x - sourceEntity.square.x) * (180 / Math.PI);
+            console.log('fire bullet ', baseAngle);
+            this.bulletGroup.getFirstExists(false).fire(x, y, -baseAngle, this.bulletSpeed, 0, 0, currentDistance);
+        }
+        else {
+            this.shootMultyBullet(sourceEntity, targetEntity);
+        }
+    };
+    WeaponImpl.prototype.shootSingleBullet = function (sourceEntity, targetEntity) {
+        var damageModifier = 1; //plus tard on aura les modifieurs source et cible
+        if (!this.checkHitSuccess()) {
+            return;
+        }
+        if (this.checkCriticalSuccess()) {
+            damageModifier = 2;
+        }
+        var damage = damageModifier * this.getDamage();
+        targetEntity.touched(sourceEntity, damage);
+        return targetEntity;
+    };
+    WeaponImpl.prototype.shootMultyBullet = function (sourceEntity, targetEntity) {
+        var _this = this;
+        // check les trajectoires des balles
+        // angle par rapport à la cible
+        // l'angle est à placer sur la ligne des x2. Puis on divise l'angle pour chacune des balles
+        // on calcul des lignes de BresenhamLine pour checker le coup sur la première entité rencontrée (plus tard on verra pour celles derrière)
+        var sourceSquare = sourceEntity.square, 
+        // les y sont inversés, il faut donc inverser l'angle.
+        baseAngle = -Math.atan2(targetEntity.square.y - sourceSquare.y, targetEntity.square.x - sourceSquare.x) * (180 / Math.PI), startAngle = baseAngle + (this.data.spreadAngle / 2), angleStep = this.data.spreadAngle / this.data.projectileByShot;
+        __WEBPACK_IMPORTED_MODULE_1_lodash__["times"](this.data.projectileByShot, function (index) {
+            _this.processSingleBullet(sourceEntity, sourceSquare, startAngle - (index * angleStep));
+        });
+    };
+    WeaponImpl.prototype.toRadians = function (angle) {
+        return angle * WeaponImpl.RADIANS_FACTOR;
+    };
+    //todo enregistrer tous les dommages d'une action et résoudre ça à la fin.
+    WeaponImpl.prototype.processSingleBullet = function (sourceEntity, sourceSquare, currentAngle) {
+        var _this = this;
+        var targetX = Math.round(Math.cos(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.x, targetY = -Math.round(Math.sin(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.y, targetSquare = this.game.map.getSquare(targetX, targetY), lineOfSight = this.game.map.BresenhamLine(sourceSquare, targetSquare), entitiesOnLineOfSight = __WEBPACK_IMPORTED_MODULE_1_lodash__(lineOfSight)
+            .tail()
+            .filter(function (square) { return square.entity; }).map(function (square) { return square.entity; })
+            .value(), lastPositionTouched = null, entityTouched = 0;
+        console.log('bullet', currentAngle, targetX, targetY);
+        entitiesOnLineOfSight.forEach(function (entity) {
+            var damageModifier = 1; //plus tard on aura les modifieurs source et cible
+            if (entityTouched >= _this.data.maxEntityByBullet) {
+                return;
+            }
+            if (!_this.checkHitSuccess()) {
+                return;
+            }
+            else {
+                entityTouched++;
+            }
+            if (_this.checkCriticalSuccess()) {
+                damageModifier = 2;
+            }
+            var damage = damageModifier * _this.getDamage();
+            entity.touched(sourceEntity, damage);
+            lastPositionTouched = entity.position;
+        });
+        console.log('fire bullet ', currentAngle);
+        var x = sourceEntity.position.x + 10;
+        var y = sourceEntity.position.y + 10;
+        var currentDistance = 0;
+        if (!lastPositionTouched) {
+            currentDistance = this.data.maxRange * 32;
+        }
+        else {
+            var dx = Math.abs(x - lastPositionTouched.x);
+            var dy = Math.abs(y - lastPositionTouched.y);
+            currentDistance = (dx + dy);
+        }
+        this.bulletGroup.getFirstExists(false).fire(x, y, -currentAngle, this.bulletSpeed, 0, 0, currentDistance);
+    };
+    WeaponImpl.prototype.reload = function () {
+        this.data.currentAmmo = this.data.maxAmmo;
+    };
+    WeaponImpl.prototype.checkJam = function () {
+        if (this.checkRollSuccess(this.data.jammedChance)) {
+            this.isJammed = true;
+        }
+        return this.isJammed;
+    };
+    WeaponImpl.prototype.getDamage = function () {
+        return this.rnd.integerInRange(this.data.minDamage, this.data.maxDamage);
+    };
+    WeaponImpl.prototype.checkCriticalSuccess = function () {
+        return this.checkRollSuccess(this.data.criticalChance);
+    };
+    WeaponImpl.prototype.checkHitSuccess = function () {
+        return this.checkRollSuccess(this.data.precision);
+    };
+    WeaponImpl.prototype.checkRollSuccess = function (chance) {
+        var roll = this.rnd.realInRange(0, 100);
+        return roll <= chance;
+    };
+    WeaponImpl.RADIANS_FACTOR = (Math.PI / 180);
+    return WeaponImpl;
+}());
+var WeaponPool = (function () {
+    function WeaponPool() {
+    }
+    WeaponPool.add = function (weapons, game) {
+        switch (weapons) {
+            case WEAPONS.NINEMM:
+                return new WeaponImpl({
+                    name: 'NINEMM',
+                    minRange: 0,
+                    maxRange: 9,
+                    minDamage: 1,
+                    maxDamage: 3,
+                    precision: 65,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.SHOOTGUN:
+                return new WeaponImpl({
+                    name: 'SHOOTGUN',
+                    minRange: 0,
+                    maxRange: 5,
+                    minDamage: 1,
+                    maxDamage: 2,
+                    precision: 80,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 4,
+                    currentAmmo: 4,
+                    spreadAngle: 30,
+                    damageRange: 0,
+                    projectileByShot: 6,
+                    isRanged: false
+                }, game, 'bullet8');
+            case WEAPONS.PIPE:
+                return new WeaponImpl({
+                    name: 'PIPE',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.AXE:
+                return new WeaponImpl({
+                    name: 'AXE',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.PUNCH:
+                return new WeaponImpl({
+                    name: 'PUNCH',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.BAT:
+                return new WeaponImpl({
+                    name: 'BAT',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.NAILBAT:
+                return new WeaponImpl({
+                    name: 'NAILBAT',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.KNIFE:
+                return new WeaponImpl({
+                    name: 'KNIFE',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            case WEAPONS.KATANA:
+                return new WeaponImpl({
+                    name: 'KATANA',
+                    minRange: 0,
+                    maxRange: 0,
+                    minDamage: 0,
+                    maxDamage: 0,
+                    precision: 0,
+                    criticalChance: 10,
+                    jammedChance: 5,
+                    maxEntityByBullet: 1,
+                    maxAmmo: 6,
+                    currentAmmo: 6,
+                    spreadAngle: 0,
+                    damageRange: 0,
+                    projectileByShot: 1,
+                    isRanged: false
+                }, game, 'bullet6');
+            default:
+                break;
+        }
+    };
+    return WeaponPool;
+}());
+//# sourceMappingURL=C:/taff/_game_01-06/src/weapon.js.map
+
+/***/ }),
+
+/***/ 294:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -96,19 +456,19 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 293;
+webpackEmptyContext.id = 294;
 
 
 /***/ }),
 
-/***/ 294:
+/***/ 295:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(383);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(404);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(384);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(405);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(419);
 
 
@@ -122,13 +482,13 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 403:
+/***/ 404:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(414);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(407);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(408);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -187,16 +547,16 @@ var AppComponent = (function () {
 
 /***/ }),
 
-/***/ 404:
+/***/ 405:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(166);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(167);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(374);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(162);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(375);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(163);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(413);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(403);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(404);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -237,7 +597,7 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ 405:
+/***/ 406:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -300,7 +660,7 @@ var Bullet = (function (_super) {
 
 /***/ }),
 
-/***/ 406:
+/***/ 407:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -314,15 +674,17 @@ var EntityType;
 
 /***/ }),
 
-/***/ 407:
+/***/ 408:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(409);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(410);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(412);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(408);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(409);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(416);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_game_weapon__ = __webpack_require__(277);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Game; });
+
 
 
 
@@ -354,7 +716,9 @@ var Game = (function () {
         this.ennemyTeam = new Array();
         this.zombieTeam = new Array();
         this.addPlayer(5, 3);
-        this.addPlayer(6, 3);
+        this.addPlayer(6, 3)
+            .addWeapon(__WEBPACK_IMPORTED_MODULE_4_app_game_weapon__["a" /* WEAPONS */].SHOOTGUN)
+            .selectWeapon(1);
         this.addZombieAt(5, 7);
         this.addZombieAt(4, 8);
         this.addZombieAt(6, 8);
@@ -378,12 +742,12 @@ var Game = (function () {
         engine.bindOver(function (point) { return _this.overOn(point); }, function (point) { return _this.overOff(point); });
     };
     Game.prototype.addZombieAt = function (x, y) {
-        var zombie = __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__["a" /* Zombie */].popZombie(this.engine, this.map.getPointAtSquare(x, y), this.zombieTeamId, this.zombieTeam);
+        var zombie = __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__["a" /* Zombie */].popZombie(this.engine, this.map.getPointAtSquare(x, y), this.zombieTeamId, this.zombieTeam, this);
         this.map.putEntityAtPoint(zombie);
         return zombie;
     };
     Game.prototype.addPlayer = function (x, y) {
-        var player = __WEBPACK_IMPORTED_MODULE_0_app_game_player__["a" /* Player */].popPlayer(this.engine, this.map.getPointAtSquare(x, y), this.playerTeamId, this.playerTeam, this.map);
+        var player = __WEBPACK_IMPORTED_MODULE_0_app_game_player__["a" /* Player */].popPlayer(this.engine, this.map.getPointAtSquare(x, y), this.playerTeamId, this.playerTeam, this);
         this.map.putEntityAtPoint(player);
         return player;
     };
@@ -393,6 +757,7 @@ var Game = (function () {
             this.nextCharacter();
         }
         console.time(this.currentTeamId + '/' + this.currentEntity.id + ' nextAction');
+        this.engine.removeAllVisibleTiles();
         this.updateVisibleSquaresOfEntity(this.currentEntity);
         this.prepareAction();
     };
@@ -405,6 +770,8 @@ var Game = (function () {
         this.currentEntity = this.currentTeam[this.currentIndex];
         this.currentEntity.currentAction = 0;
         this.engine.setGlowPosition(this.currentEntity.position);
+        this.engine.removeAllAccessibleTiles();
+        this.engine.removeAllVisibleTiles();
     };
     Game.prototype.nextTeam = function () {
         this.currentIndex = -1;
@@ -452,14 +819,13 @@ var Game = (function () {
         console.log(this.currentEntity + ' helps ' + target);
     };
     Game.prototype.overOff = function (target) {
-        var _this = this;
         if (this.currentTeamId !== this.playerTeamId || this.ticking) {
             return;
         }
         // clean visibletiles
         if (this.entityFocused) {
-            var points = this.entityFocused.visibleSquares.map(function (s) { return _this.map.getPointAtSquare(s.x, s.y); }).map(function (tile) { return tile.x + ':' + tile.y; });
-            this.engine.removeVisibleTiles(points);
+            //let points = this.entityFocused.visibleSquares.map(s => this.map.getPointAtSquare(s.x, s.y)).map(tile => tile.x + ':' + tile.y);
+            this.engine.removeAllVisibleTiles();
         }
         this.entityFocused = null;
     };
@@ -514,7 +880,7 @@ var Game = (function () {
         var _this = this;
         if (this.currentTeamId === this.zombieTeamId) {
             console.time(this.currentTeamId + '/' + this.currentEntity.id + ' zombie play');
-            this.zombieTeam[this.currentIndex].play(this.map, function () {
+            this.zombieTeam[this.currentIndex].play(function () {
                 console.timeEnd(_this.currentTeamId + '/' + _this.currentEntity.id + ' zombie play');
                 console.timeEnd(_this.currentTeamId + '/' + _this.currentEntity.id + ' nextAction');
                 console.time(_this.currentTeamId + '/' + _this.currentEntity.id + ' timeout');
@@ -549,17 +915,27 @@ var Game = (function () {
         });
         this.engine.addAccessibleTiles(positions);
     };
+    Game.prototype.getPathTo = function (start, end, range, useDiagonal) {
+        return this.map.getPathTo(start, end, range, useDiagonal);
+    };
+    Game.prototype.getSquare = function (x, y) {
+        return this.map.getSquare(x, y);
+    };
+    Game.prototype.setDead = function (dead, by) {
+        this.engine.showText(by.position.x, by.position.y, ' has killed ' + dead.id);
+        this.map.setDead(dead);
+    };
     return Game;
 }());
 //# sourceMappingURL=C:/taff/_game_01-06/src/game.js.map
 
 /***/ }),
 
-/***/ 408:
+/***/ 409:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(191);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(120);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GameMap; });
 
@@ -573,7 +949,6 @@ var GameMap = (function () {
     }
     GameMap.prototype.setEngine = function (engine) {
         this.engine = engine;
-        this.rnd = engine.phaserGame.rnd;
     };
     GameMap.prototype.setVisibileSquares = function (entity, force) {
         var _this = this;
@@ -859,6 +1234,16 @@ var GameMap = (function () {
         };
         move();
     };
+    GameMap.prototype.setDead = function (dead) {
+        dead.square.entity = null;
+        var grid = this.grid, sourceSquare = dead.square, sourceInfo = grid[sourceSquare.y][sourceSquare.x];
+        if (sourceInfo <= 1) {
+            grid[sourceSquare.y][sourceSquare.x] = 0;
+        }
+        else if (sourceInfo > 9) {
+            grid[sourceSquare.y][sourceSquare.x] -= 10;
+        }
+    };
     GameMap.prototype.getName = function () {
         return this.name;
     };
@@ -973,12 +1358,12 @@ var GameMap = (function () {
 
 /***/ }),
 
-/***/ 409:
+/***/ 410:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(276);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(411);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(277);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Player; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -989,32 +1374,41 @@ var __extends = (this && this.__extends) || function (d, b) {
 
 var Player = (function (_super) {
     __extends(Player, _super);
-    function Player(engine, position, team) {
+    function Player(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
+        this.game = game;
         this.sprite = engine.createHuman(position);
-        this.teamId = team;
+        this.teamId = teamId;
         this.maxAction = 2;
         this.mouvementRange = 10;
         this.visionRange = 4;
         this.coverDetection = 10;
         this.updateAccessibleTiles = true;
+        team.push(this);
     }
     Player.prototype.move = function (targetPosition, callback) {
         _super.prototype.move.call(this, targetPosition, callback);
         return this;
     };
-    Player.popPlayer = function (engine, position, teamId, team, map) {
-        var newPlayer = new Player(engine, position, teamId);
-        team.push(newPlayer);
-        newPlayer.weapons.push(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["a" /* WeaponPool */].add(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["b" /* WEAPONS */].SHOOTGUN, map));
+    Player.popPlayer = function (engine, position, teamId, team, game) {
+        var newPlayer = new Player(engine, position, teamId, team, game);
+        newPlayer.addWeapon(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["a" /* WEAPONS */].NINEMM);
         return newPlayer;
     };
     Player.prototype.attack = function (target) {
         _super.prototype.attack.call(this, target);
         this.engine.playSound('gun');
         this.engine.shake();
-        this.weapons[0].fire(this, target);
+        this.weapons[this.selectedWeaponIndex].fire(this, target);
         console.log('zombie attacks ' + target.id + target.teamId);
+        return this;
+    };
+    Player.prototype.addWeapon = function (weaponType) {
+        this.weapons.push(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["b" /* WeaponPool */].add(weaponType, this.game));
+        return this;
+    };
+    Player.prototype.selectWeapon = function (index) {
+        this.selectedWeaponIndex = index;
         return this;
     };
     return Player;
@@ -1023,7 +1417,7 @@ var Player = (function (_super) {
 
 /***/ }),
 
-/***/ 410:
+/***/ 411:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1051,345 +1445,12 @@ var VisibilitySprite = (function (_super) {
 
 /***/ }),
 
-/***/ 411:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(405);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(191);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return WEAPONS; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WeaponPool; });
-
-
-// prevoir une compétence pour utiliser les machines guns debout
-var WEAPONS;
-(function (WEAPONS) {
-    WEAPONS[WEAPONS["NINEMM"] = 0] = "NINEMM";
-    WEAPONS[WEAPONS["SHOOTGUN"] = 1] = "SHOOTGUN";
-    WEAPONS[WEAPONS["AR15"] = 2] = "AR15";
-    //Ruger No. 1 Varminter K1-V-BBZ
-    WEAPONS[WEAPONS["RUGER_K1"] = 3] = "RUGER_K1";
-    WEAPONS[WEAPONS["BLASER_R8"] = 4] = "BLASER_R8";
-    WEAPONS[WEAPONS["PIPE"] = 5] = "PIPE";
-    WEAPONS[WEAPONS["AXE"] = 6] = "AXE";
-    WEAPONS[WEAPONS["PUNCH"] = 7] = "PUNCH";
-    WEAPONS[WEAPONS["BAT"] = 8] = "BAT";
-    WEAPONS[WEAPONS["NAILBAT"] = 9] = "NAILBAT";
-    WEAPONS[WEAPONS["KNIFE"] = 10] = "KNIFE";
-    WEAPONS[WEAPONS["KATANA"] = 11] = "KATANA";
-    WEAPONS[WEAPONS["HAND_GRENADE"] = 12] = "HAND_GRENADE";
-})(WEAPONS || (WEAPONS = {}));
-var WeaponImpl = (function () {
-    function WeaponImpl(data, map, key) {
-        this.data = data;
-        this.map = map;
-        this.isJammed = false;
-        this.rnd = map.rnd;
-        this.bulletGroup = this.map.engine.addGroup(data.name);
-        for (var i = 0; i < 64; i++) {
-            this.bulletGroup.add(new __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__["a" /* Bullet */](this.map.engine.phaserGame, 'bullet6'), true);
-        }
-    }
-    WeaponImpl.prototype.fire = function (sourceEntity, targetEntity) {
-        this.bulletSpeed = 700;
-        if (this.isJammed) {
-            return;
-        }
-        if (this.data.isRanged) {
-            if (this.data.currentAmmo > 0) {
-                this.data.currentAmmo--;
-            }
-            else {
-                //you should reload
-                return;
-            }
-        }
-        if (this.checkJam()) {
-            return;
-        }
-        if (this.data.spreadAngle == 0) {
-            this.shootSingleBullet(sourceEntity, targetEntity);
-        }
-        else {
-            this.shootMultyBullet(sourceEntity, targetEntity);
-        }
-    };
-    WeaponImpl.prototype.shootSingleBullet = function (sourceEntity, targetEntity) {
-        var damageModifier = 1; //plus tard on aura les modifieurs source et cible
-        if (!this.checkHitSuccess()) {
-            return;
-        }
-        if (this.checkCriticalSuccess()) {
-            damageModifier = 2;
-        }
-        var damage = damageModifier * this.getDamage();
-        targetEntity.touched(sourceEntity, damage);
-    };
-    WeaponImpl.prototype.shootMultyBullet = function (sourceEntity, targetEntity) {
-        var _this = this;
-        // check les trajectoires des balles
-        // angle par rapport à la cible
-        // l'angle est à placer sur la ligne des x2. Puis on divise l'angle pour chacune des balles
-        // on calcul des lignes de BresenhamLine pour checker le coup sur la première entité rencontrée (plus tard on verra pour celles derrière)
-        var sourceSquare = sourceEntity.square, 
-        // les y sont inversés, il faut donc inverser l'angle.
-        baseAngle = -Math.atan2(targetEntity.square.y - sourceSquare.y, targetEntity.square.x - sourceSquare.x) * (180 / Math.PI), startAngle = baseAngle + (this.data.spreadAngle / 2), angleStep = this.data.spreadAngle / this.data.projectileByShot;
-        __WEBPACK_IMPORTED_MODULE_1_lodash__["times"](this.data.projectileByShot, function (index) {
-            _this.processSingleBullet(sourceEntity, sourceSquare, startAngle - (index * angleStep));
-        });
-    };
-    WeaponImpl.prototype.toRadians = function (angle) {
-        return angle * WeaponImpl.RADIANS_FACTOR;
-    };
-    //todo enregistrer tous les dommages d'une action et résoudre ça à la fin.
-    WeaponImpl.prototype.processSingleBullet = function (sourceEntity, sourceSquare, currentAngle) {
-        var _this = this;
-        var targetX = Math.round(Math.cos(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.x, targetY = -Math.round(Math.sin(this.toRadians(currentAngle)) * this.data.maxRange) + sourceSquare.y, targetSquare = this.map.getSquare(targetX, targetY), lineOfSight = this.map.BresenhamLine(sourceSquare, targetSquare), entitiesOnLineOfSight = __WEBPACK_IMPORTED_MODULE_1_lodash__(lineOfSight)
-            .tail()
-            .filter(function (square) { return square.entity; }).map(function (square) { return square.entity; })
-            .value(), lastPositionTouched = null, entityTouched = 0;
-        console.log('bullet', currentAngle, targetX, targetY);
-        entitiesOnLineOfSight.forEach(function (entity) {
-            var damageModifier = 1; //plus tard on aura les modifieurs source et cible
-            if (entityTouched >= _this.data.maxEntityByBullet) {
-                return;
-            }
-            if (!_this.checkHitSuccess()) {
-                return;
-            }
-            else {
-                entityTouched++;
-            }
-            if (_this.checkCriticalSuccess()) {
-                damageModifier = 2;
-            }
-            var damage = damageModifier * _this.getDamage();
-            entity.touched(sourceEntity, damage);
-            lastPositionTouched = entity.position;
-        });
-        console.log('fire bullet ', currentAngle);
-        var x = sourceEntity.position.x + 10;
-        var y = sourceEntity.position.y + 10;
-        var currentDistance = 0;
-        if (!lastPositionTouched) {
-            currentDistance = this.data.maxRange * 32;
-        }
-        else {
-            var dx = Math.abs(x - lastPositionTouched.x);
-            var dy = Math.abs(y - lastPositionTouched.y);
-            currentDistance = (dx + dy);
-        }
-        this.bulletGroup.getFirstExists(false).fire(x, y, -currentAngle, this.bulletSpeed, 0, 0, currentDistance);
-    };
-    WeaponImpl.prototype.reload = function () {
-        this.data.currentAmmo = this.data.maxAmmo;
-    };
-    WeaponImpl.prototype.checkJam = function () {
-        if (this.checkRollSuccess(this.data.jammedChance)) {
-            this.isJammed = true;
-        }
-        return this.isJammed;
-    };
-    WeaponImpl.prototype.getDamage = function () {
-        return this.rnd.integerInRange(this.data.minDamage, this.data.maxDamage);
-    };
-    WeaponImpl.prototype.checkCriticalSuccess = function () {
-        return this.checkRollSuccess(this.data.criticalChance);
-    };
-    WeaponImpl.prototype.checkHitSuccess = function () {
-        return this.checkRollSuccess(this.data.precision);
-    };
-    WeaponImpl.prototype.checkRollSuccess = function (chance) {
-        var roll = this.rnd.realInRange(0, 100);
-        return roll <= chance;
-    };
-    WeaponImpl.RADIANS_FACTOR = (Math.PI / 180);
-    return WeaponImpl;
-}());
-var WeaponPool = (function () {
-    function WeaponPool() {
-    }
-    WeaponPool.add = function (weapons, map) {
-        switch (weapons) {
-            case WEAPONS.NINEMM:
-                return new WeaponImpl({
-                    name: 'NINEMM',
-                    minRange: 0,
-                    maxRange: 9,
-                    minDamage: 1,
-                    maxDamage: 3,
-                    precision: 65,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.SHOOTGUN:
-                return new WeaponImpl({
-                    name: 'SHOOTGUN',
-                    minRange: 0,
-                    maxRange: 5,
-                    minDamage: 1,
-                    maxDamage: 2,
-                    precision: 80,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 4,
-                    currentAmmo: 4,
-                    spreadAngle: 30,
-                    damageRange: 0,
-                    projectileByShot: 6,
-                    isRanged: false
-                }, map, 'bullet8');
-            case WEAPONS.PIPE:
-                return new WeaponImpl({
-                    name: 'PIPE',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.AXE:
-                return new WeaponImpl({
-                    name: 'AXE',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.PUNCH:
-                return new WeaponImpl({
-                    name: 'PUNCH',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.BAT:
-                return new WeaponImpl({
-                    name: 'BAT',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.NAILBAT:
-                return new WeaponImpl({
-                    name: 'NAILBAT',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.KNIFE:
-                return new WeaponImpl({
-                    name: 'KNIFE',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            case WEAPONS.KATANA:
-                return new WeaponImpl({
-                    name: 'KATANA',
-                    minRange: 0,
-                    maxRange: 0,
-                    minDamage: 0,
-                    maxDamage: 0,
-                    precision: 0,
-                    criticalChance: 10,
-                    jammedChance: 5,
-                    maxEntityByBullet: 1,
-                    maxAmmo: 6,
-                    currentAmmo: 6,
-                    spreadAngle: 0,
-                    damageRange: 0,
-                    projectileByShot: 1,
-                    isRanged: false
-                }, map, 'bullet6');
-            default:
-                break;
-        }
-    };
-    return WeaponPool;
-}());
-//# sourceMappingURL=C:/taff/_game_01-06/src/weapon.js.map
-
-/***/ }),
-
 /***/ 412:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(276);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(191);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Zombie; });
 var __extends = (this && this.__extends) || function (d, b) {
@@ -1408,8 +1469,9 @@ var status;
 var zombieTypes = ['01', '02', '03', '04', '05', '06', '07', '08'];
 var Zombie = (function (_super) {
     __extends(Zombie, _super);
-    function Zombie(engine, position, teamId, team) {
+    function Zombie(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
+        this.game = game;
         this.sprite = engine.createZombie(position, zombieTypes[__WEBPACK_IMPORTED_MODULE_1_lodash__["random"](0, zombieTypes.length - 1)]);
         this.teamId = teamId;
         this.team = team;
@@ -1420,23 +1482,24 @@ var Zombie = (function (_super) {
         this.visionRange = 12;
         this.coverDetection = 10;
         this.updateAccessibleTiles = true;
+        team.push(this);
     }
-    Zombie.popZombie = function (engine, position, teamId, team) {
-        var newZombie = new Zombie(engine, position, teamId, team);
-        team.push(newZombie);
+    Zombie.popZombie = function (engine, position, teamId, team, game) {
+        var newZombie = new Zombie(engine, position, teamId, team, game);
         return newZombie;
     };
-    Zombie.prototype.play = function (map, callback) {
+    Zombie.prototype.play = function (callback) {
         var visibleEntities = this.visibleSquares.filter(function (square) { return square.entity; }).map(function (s) { return s.entity; });
-        if (this.lookForHumaaaans(visibleEntities, map, callback)) {
+        if (this.lookForHumaaaans(visibleEntities, callback)) {
             console.log('fresh meat ...');
         }
         else {
-            this.goForCloserZombie(visibleEntities, map, callback);
+            this.goForCloserZombie(visibleEntities, callback);
         }
     };
-    Zombie.prototype.pathToClosestEntity = function (entitiesGroup, map) {
-        var closerHuman = null, actualDistanceFromHuman = 999, mouvementRange = this.mouvementRange, pathToGo = null, actualSquare = this.square, pathes = this.pathMap, moveTargetSquare, self = this;
+    Zombie.prototype.pathToClosestEntity = function (entitiesGroup) {
+        var _this = this;
+        var closerHuman = null, actualDistanceFromHuman = 999, mouvementRange = this.mouvementRange, pathToGo = null, actualSquare = this.square, pathes = this.pathMap, moveTargetSquare, self = this, game = this.game;
         entitiesGroup.forEach(function (h) {
             var targetSquare = h.square;
             //check les 8 cases adjacentes à la cible
@@ -1449,7 +1512,7 @@ var Zombie = (function (_super) {
             checkPath(targetSquare.x, targetSquare.y + 1);
             checkPath(targetSquare.x + 1, targetSquare.y + 1);
             if (!pathToGo) {
-                var path = map.getPathTo(actualSquare, targetSquare, mouvementRange), lastStep = __WEBPACK_IMPORTED_MODULE_1_lodash__["last"](path), lastSquare = lastStep ? map.getSquare(lastStep.x, lastStep.y) : null;
+                var path = _this.game.getPathTo(actualSquare, targetSquare, mouvementRange), lastStep = __WEBPACK_IMPORTED_MODULE_1_lodash__["last"](path), lastSquare = lastStep ? _this.game.getSquare(lastStep.x, lastStep.y) : null;
                 console.log('path to humaaaans', pathToGo);
                 if (path) {
                     setClosestPath(path, lastSquare);
@@ -1461,11 +1524,11 @@ var Zombie = (function (_super) {
                     setClosestPath([], actualSquare);
                     return;
                 }
-                var square = map.getSquare(x, y);
+                var square = game.getSquare(x, y);
                 if (square.entity) {
                     return;
                 }
-                var path = map.getPathTo(actualSquare, square, mouvementRange), lastStep = __WEBPACK_IMPORTED_MODULE_1_lodash__["last"](path), lastSquare = lastStep ? map.getSquare(lastStep.x, lastStep.y) : null;
+                var path = game.getPathTo(actualSquare, square, mouvementRange), lastStep = __WEBPACK_IMPORTED_MODULE_1_lodash__["last"](path), lastSquare = lastStep ? game.getSquare(lastStep.x, lastStep.y) : null;
                 if (path && path.length > 0 && path.length < actualDistanceFromHuman && lastSquare === square) {
                     setClosestPath(path, lastSquare);
                     return;
@@ -1488,10 +1551,10 @@ var Zombie = (function (_super) {
             target: moveTargetSquare
         };
     };
-    Zombie.prototype.goForCloserZombie = function (entities, map, callback) {
+    Zombie.prototype.goForCloserZombie = function (entities, callback) {
         var _this = this;
         var zombie = entities.filter(function (e) { return e.teamId === _this.teamId && e.id != _this.id; });
-        var pathToClosest = this.pathToClosestEntity(zombie, map);
+        var pathToClosest = this.pathToClosestEntity(zombie);
         if (!pathToClosest.entity) {
             callback();
             return false;
@@ -1505,14 +1568,14 @@ var Zombie = (function (_super) {
         else {
             this.targetSquare = pathToClosest.target;
             this.updateAccessibleTiles = true;
-            map.moveEntityFollowingPath(this, pathToClosest.path, function () { return callback(); }, function () { return console.error('oh ...'); });
+            this.game.map.moveEntityFollowingPath(this, pathToClosest.path, function () { return callback(); }, function () { return console.error('oh ...'); });
         }
         return false;
     };
-    Zombie.prototype.lookForHumaaaans = function (entities, map, callback) {
+    Zombie.prototype.lookForHumaaaans = function (entities, callback) {
         var _this = this;
         var humans = entities.filter(function (e) { return e.teamId !== _this.teamId; });
-        var pathToClosest = this.pathToClosestEntity(humans, map);
+        var pathToClosest = this.pathToClosestEntity(humans);
         //plus tard, il ira de manière aléatoire en favorisant le plus proche
         if (!pathToClosest.entity) {
             return false;
@@ -1526,7 +1589,7 @@ var Zombie = (function (_super) {
         else {
             this.targetSquare = pathToClosest.target;
             this.updateAccessibleTiles = true;
-            map.moveEntityFollowingPath(this, pathToClosest.path, function () { return callback(); }, function () { return console.error('oh ...'); });
+            this.game.map.moveEntityFollowingPath(this, pathToClosest.path, function () { return callback(); }, function () { return console.error('oh ...'); });
         }
         return true;
     };
@@ -1543,11 +1606,7 @@ var Zombie = (function (_super) {
         this.pv = this.pv - damage;
         if (this.pv <= 0) {
             console.log('aaaargh, i am really dead');
-            this.sprite.alive = false;
-            this.sprite.visible = false;
-            this.sprite.animations.stop();
-            this.square.entity = null;
-            var index = __WEBPACK_IMPORTED_MODULE_1_lodash__(this.team).remove(['id', this.id]).value();
+            this.die(sourceEntity);
         }
         return this;
     };
@@ -1562,7 +1621,7 @@ var Zombie = (function (_super) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(162);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(163);
 /* unused harmony export DefaultRequestOptions */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return requestOptionsProvider; });
 var __extends = (this && this.__extends) || function (d, b) {
@@ -1609,7 +1668,7 @@ can be found in the LICENSE file at http://angular.io/license
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(162);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(163);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__ = __webpack_require__(479);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GameService; });
@@ -1812,7 +1871,7 @@ var DelayedAnimation = (function (_super) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(417);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(410);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(411);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(415);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Engine; });
 
@@ -1875,7 +1934,7 @@ var Engine = (function () {
     }
     Engine.prototype.init = function (mapResponse) {
         var self = this;
-        this.phaserGame = new Phaser.Game(1600 * window.devicePixelRatio, (window.innerHeight - 100) * window.devicePixelRatio, Phaser.WEBGL, 'game', { preload: preload, create: create, update: update }, false, false);
+        this.phaserGame = new Phaser.Game((window.innerWidth / 2) * window.devicePixelRatio, (window.innerHeight / 2) * window.devicePixelRatio, Phaser.WEBGL, 'game', { preload: preload, create: create, update: update }, false, false);
         function preload() {
             self.preload(mapResponse);
         }
@@ -1909,7 +1968,7 @@ var Engine = (function () {
         this.gameService.LoadTileMap(mapResponse, this.phaserGame);
         this.phaserGame.load.audio('boden', ['assets/sounds/essai.mp3']);
         this.phaserGame.load.audio('MechDrone1', ['assets/sounds/MechDrone1.mp3']);
-        this.phaserGame.load.audio('soundeffect', ['assets/sounds/soundeffect.ogg']);
+        this.phaserGame.load.audio('soundeffect', ['assets/sounds/soundeffect_game.ogg']);
         this.phaserGame.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.image('bullet8', 'assets/sprites/bullet8.png');
         this.phaserGame.load.image('bullet6', 'assets/sprites/bullet6.png');
@@ -1928,9 +1987,9 @@ var Engine = (function () {
         //à enlever
         game.camera.setPosition(32, 32);
         soundeffect.allowMultiple = true;
-        soundeffect.addMarker('shotgun', 10.15, 0.940);
-        soundeffect.addMarker('gun', 109.775, 0.550, 0.5);
-        soundeffect.addMarker('grunt', 197.618, 0.570);
+        soundeffect.addMarker('shotgun', 1.130, 0.985);
+        soundeffect.addMarker('gun', 0.575, 0.550);
+        soundeffect.addMarker('grunt', 0, 0.570);
         this.soundeffect = soundeffect;
         game.physics.startSystem(Phaser.Physics.ARCADE);
         var createdMap = this.gameService.create(mapResponse, game, this.gamegroup);
@@ -2187,6 +2246,14 @@ var Engine = (function () {
             }
         }
     };
+    Engine.prototype.showText = function (x, y, text) {
+        if (this.xptext) {
+            this.xptext.destroy();
+        }
+        this.xptext = this.phaserGame.add.text(x, y, text, null);
+        this.xptext.font = 'Roboto';
+        this.xptext.fontSize = 12;
+    };
     Engine.prototype.pointToTilePosition = function () {
         var game = this.phaserGame, camera = game.camera, activePointer = game.input.activePointer, cameraPosition = camera.position, tilesetSize = 32, point = new Phaser.Point();
         point.x = tilesetSize * Math.round((activePointer.x + cameraPosition.x - 16) / tilesetSize);
@@ -2315,7 +2382,7 @@ var environment = {
 /***/ 473:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(190)();
+exports = module.exports = __webpack_require__(191)();
 // imports
 
 
@@ -2340,7 +2407,7 @@ module.exports = "<div style=\"position: relative\">\r\n    <div id=\"game\" cla
 /***/ 493:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(294);
+module.exports = __webpack_require__(295);
 
 
 /***/ })
