@@ -19,6 +19,7 @@ var _Entity = (function () {
         this.engine = engine;
         this.position = position;
         this.id = _Entity.idcount++;
+        this.name = engine.pickName();
     }
     _Entity.prototype.maskEntity = function () {
         this.isMasked = true;
@@ -95,7 +96,7 @@ var _Entity = (function () {
     _Entity.idcount = 0;
     return _Entity;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/_entity.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/_entity.js.map
 
 /***/ }),
 
@@ -142,6 +143,7 @@ var WeaponImpl = (function () {
     WeaponImpl.prototype.fire = function (sourceEntity, targetEntity) {
         this.bulletSpeed = 700;
         if (this.isJammed) {
+            console.log('weapon jammed !!!!');
             return;
         }
         if (this.data.isRanged) {
@@ -443,7 +445,7 @@ var WeaponPool = (function () {
     };
     return WeaponPool;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/weapon.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/weapon.js.map
 
 /***/ }),
 
@@ -478,7 +480,7 @@ if (__WEBPACK_IMPORTED_MODULE_3__environments_environment__["a" /* environment *
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["a" /* enableProdMode */])();
 }
 __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__["a" /* platformBrowserDynamic */])().bootstrapModule(__WEBPACK_IMPORTED_MODULE_2__app_app_module__["a" /* AppModule */]);
-//# sourceMappingURL=C:/taff/_game_01-06/src/main.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/main.js.map
 
 /***/ }),
 
@@ -543,7 +545,7 @@ var AppComponent = (function () {
     return AppComponent;
     var _a, _b;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/app.component.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/app.component.js.map
 
 /***/ }),
 
@@ -593,7 +595,7 @@ var AppModule = (function () {
     ], AppModule);
     return AppModule;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/app.module.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/app.module.js.map
 
 /***/ }),
 
@@ -656,7 +658,7 @@ var Bullet = (function (_super) {
     };
     return Bullet;
 }(Phaser.Sprite));
-//# sourceMappingURL=C:/taff/_game_01-06/src/bullet.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/bullet.js.map
 
 /***/ }),
 
@@ -670,7 +672,7 @@ var EntityType;
     EntityType[EntityType["human"] = 0] = "human";
     EntityType[EntityType["zombie"] = 1] = "zombie";
 })(EntityType || (EntityType = {}));
-//# sourceMappingURL=C:/taff/_game_01-06/src/entity.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/entity.js.map
 
 /***/ }),
 
@@ -823,29 +825,31 @@ var Game = (function () {
         console.log(this.currentEntity + ' helps ' + target);
     };
     Game.prototype.overOff = function (target) {
+        this.engine.hideEntityStatus();
+        this.engine.removeAllVisibleTiles();
         if (this.currentTeamId !== this.playerTeamId || this.ticking) {
             return;
-        }
-        // clean visibletiles
-        if (this.entityFocused) {
-            //let points = this.entityFocused.visibleSquares.map(s => this.map.getPointAtSquare(s.x, s.y)).map(tile => tile.x + ':' + tile.y);
-            this.engine.removeAllVisibleTiles();
         }
         this.entityFocused = null;
     };
     Game.prototype.overOn = function (target) {
         var _this = this;
-        if (this.currentTeamId !== this.playerTeamId || this.ticking) {
+        if (this.ticking) {
             return;
         }
         var square = this.map.getSquareAtPoint(target);
         console.log('over', square);
         if (square.entity) {
-            this.entityFocused = square.entity;
-            var points = square.entity.visibleSquares.map(function (s) { return _this.map.getPointAtSquare(s.x, s.y); });
-            console.time('addVisibleTiles');
-            this.engine.addVisibleTiles([], points);
-            console.timeEnd('addVisibleTiles');
+            if (this.currentTeamId === this.playerTeamId) {
+                this.engine.drawEntityStatus(square.entity);
+            }
+            else if (this.currentTeamId === this.zombieTeamId) {
+                this.entityFocused = square.entity;
+                var points = square.entity.visibleSquares.map(function (s) { return _this.map.getPointAtSquare(s.x, s.y); });
+                console.time('addVisibleTiles');
+                this.engine.addVisibleTiles([], points);
+                console.timeEnd('addVisibleTiles');
+            }
         }
     };
     Game.prototype.clickOn = function (target) {
@@ -932,12 +936,12 @@ var Game = (function () {
         return this.map.getSquare(x, y);
     };
     Game.prototype.setDead = function (dead, by) {
-        this.engine.showText(by.position.x, by.position.y, ' has killed ' + dead.id);
+        this.engine.showText(by.position.x, by.position.y, ' has killed ' + dead.name);
         this.map.setDead(dead);
     };
     return Game;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/game.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/game.js.map
 
 /***/ }),
 
@@ -1364,7 +1368,7 @@ var GameMap = (function () {
     };
     return GameMap;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/map.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/map.js.map
 
 /***/ }),
 
@@ -1393,6 +1397,8 @@ var Player = (function (_super) {
         this.mouvementRange = 10;
         this.visionRange = 4;
         this.coverDetection = 10;
+        this.pv = 10;
+        this.maxPv = 10;
         this.updateAccessibleTiles = true;
         team.push(this);
     }
@@ -1423,7 +1429,7 @@ var Player = (function (_super) {
     };
     return Player;
 }(__WEBPACK_IMPORTED_MODULE_0_app_game_entity__["a" /* _Entity */]));
-//# sourceMappingURL=C:/taff/_game_01-06/src/player.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/player.js.map
 
 /***/ }),
 
@@ -1451,7 +1457,7 @@ var VisibilitySprite = (function (_super) {
     };
     return VisibilitySprite;
 }(__WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__["a" /* Spawnable */]));
-//# sourceMappingURL=C:/taff/_game_01-06/src/visibilitySprite.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/visibilitySprite.js.map
 
 /***/ }),
 
@@ -1488,6 +1494,7 @@ var Zombie = (function (_super) {
         this.maxAction = 2;
         this.mouvementRange = 6;
         this.pv = 6;
+        this.maxPv = 6;
         this.currentStatus = status.IDDLE;
         this.visionRange = 12;
         this.coverDetection = 10;
@@ -1622,7 +1629,7 @@ var Zombie = (function (_super) {
     };
     return Zombie;
 }(__WEBPACK_IMPORTED_MODULE_0_app_game_entity__["a" /* _Entity */]));
-//# sourceMappingURL=C:/taff/_game_01-06/src/zombie.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/zombie.js.map
 
 /***/ }),
 
@@ -1669,7 +1676,7 @@ Copyright 2017 Google Inc. All Rights Reserved.
 Use of this source code is governed by an MIT-style license that
 can be found in the LICENSE file at http://angular.io/license
 */ 
-//# sourceMappingURL=C:/taff/_game_01-06/src/default-request-options.service.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/default-request-options.service.js.map
 
 /***/ }),
 
@@ -1766,7 +1773,7 @@ var GameService = (function () {
     return GameService;
     var _a;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/game.service.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/game.service.js.map
 
 /***/ }),
 
@@ -1870,7 +1877,7 @@ var DelayedAnimation = (function (_super) {
     return DelayedAnimation;
 }(Phaser.Animation));
 /* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
-//# sourceMappingURL=C:/taff/_game_01-06/src/delayedAnimation.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
 
 /***/ }),
 
@@ -1966,17 +1973,20 @@ var Engine = (function () {
         this.phaserGame.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.image('bullet8', 'assets/sprites/bullet8.png');
         this.phaserGame.load.image('bullet6', 'assets/sprites/bullet6.png');
+        this.phaserGame.load.atlas('energy-tank', 'assets/energy-tank_spritesheet.png', 'assets/energy-tank_spritesheet.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        this.phaserGame.load.json('names', 'assets/names.json');
     };
     Engine.prototype.create = function (mapResponse) {
         var game = this.phaserGame;
         var MechDrone1 = game.add.audio('MechDrone1', 1, true);
         var soundeffect = game.add.audio('soundeffect', 0.1, true);
+        this.namesJson = this.phaserGame.cache.getJSON('names');
         // il faut ordonnancer les groups par ordre d'apparition
         this.tileGroup = game.add.group();
         this.rangegroup = game.add.group();
         this.visiongroup = game.add.group();
-        this.ihmGroup = game.add.group();
         this.gamegroup = game.add.group();
+        this.ihmGroup = game.add.group();
         MechDrone1.play();
         MechDrone1.volume = 0.5;
         soundeffect.volume = 0;
@@ -2005,12 +2015,10 @@ var Engine = (function () {
         };
         this.visibleMarkerPool = new __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__["a" /* Pool */](game, __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__["a" /* VisibilitySprite */], 200, 'visibleMarker');
         this.marker = game.add.sprite(0, 0, 'markers');
-        this.ihmGroup.add(this.marker);
         this.marker.animations.add("blink", ["marker/blink1", "marker/blink2"], 5, true);
         this.marker.play("blink");
         game.physics.enable(this.marker, Phaser.Physics.ARCADE);
         this.glow = game.add.sprite(-100, -100, 'markers');
-        this.ihmGroup.add(this.glow);
         this.glow.animations.add("glow", ["marker/active_entity"], 5, true);
         this.glow.play("glow");
         game.physics.enable(this.glow, Phaser.Physics.ARCADE);
@@ -2020,9 +2028,62 @@ var Engine = (function () {
         if (this.debug) {
             this.text = this.phaserGame.add.text(-100, -100, '', null);
         }
+        this.energyTank = new Phaser.Sprite(game, -100, -100, 'energy-tank');
+        this.energyTank.visible = false;
+        this.visiongroup.add(this.glow);
+        this.ihmGroup.add(this.marker);
+        this.ihmGroup.add(this.energyTank);
         //this.gamegroup.scale.x = 2;
         //this.gamegroup.scale.y = 2;
         this.o.next('ok');
+    };
+    Engine.prototype.pickName = function () {
+        var rndIndex = this.phaserGame.rnd.integerInRange(0, this.namesJson.length - 1);
+        return this.namesJson[rndIndex].name;
+    };
+    Engine.prototype.hideEntityStatus = function () {
+        this.energyTank.visible = false;
+    };
+    Engine.prototype.drawEntityStatus = function (entity, lifeStart, lifeTarget) {
+        /*        this.statushics = this.phaserGame.add.Graphics(0, 0);
+                this.statushics.beginFill(0xFFFF00, 1);
+                this.statushics.lineStyle(10, 0xe91010, 1);
+                //this.statushics.bounds = new PIXI.Rectangle(0, 0, 200, 200);
+                this.statushics.drawRect(0, 0, 200, 200);
+        */
+        this.energyTank.x = entity.position.x + 10;
+        this.energyTank.y = entity.position.y + 30;
+        if (lifeStart && lifeTarget) {
+            this.energyTank.animations.add('now');
+            this.energyTank.animations.add("demo", [
+                "energy0",
+                "energy1",
+                "energy2",
+                "energy3",
+                "energy4",
+                "energy5",
+                "energy6",
+                "energy7",
+                "energy8",
+                "energy9",
+                "energy10",
+                "energy11",
+                "energy12",
+                "energy13",
+                "energy14",
+                "energy15",
+                "energy16",
+                "energy17",
+                "energy18"
+            ], 5, true);
+            this.energyTank.play("demo");
+        }
+        else {
+            // on cherche a afficher la frame correspondant au niveau de vie
+            var maxPV = entity.maxPv, currentPV = entity.pv, pvPercentage = (100 * currentPV) / maxPV, frame = Math.floor((this.energyTank.animations.frameTotal - 1) * pvPercentage / 100);
+            this.energyTank.frame = frame;
+        }
+        this.energyTank.visible = true;
     };
     Engine.prototype.focusOnEntity = function (entity) {
         this.phaserGame.camera.focusOn(entity.sprite);
@@ -2296,7 +2357,7 @@ var Engine = (function () {
     };
     return Engine;
 }());
-//# sourceMappingURL=C:/taff/_game_01-06/src/engine.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/engine.js.map
 
 /***/ }),
 
@@ -2340,7 +2401,7 @@ var Pool = (function (_super) {
     };
     return Pool;
 }(Phaser.Group));
-//# sourceMappingURL=C:/taff/_game_01-06/src/pool.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/pool.js.map
 
 /***/ }),
 
@@ -2367,7 +2428,7 @@ var Spawnable = (function (_super) {
     };
     return Spawnable;
 }(Phaser.Sprite));
-//# sourceMappingURL=C:/taff/_game_01-06/src/spawnable.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/spawnable.js.map
 
 /***/ }),
 
@@ -2383,7 +2444,7 @@ var Spawnable = (function (_super) {
 var environment = {
     production: false
 };
-//# sourceMappingURL=C:/taff/_game_01-06/src/environment.js.map
+//# sourceMappingURL=D:/dev/_game_01-06/src/environment.js.map
 
 /***/ }),
 
@@ -2395,7 +2456,7 @@ exports = module.exports = __webpack_require__(191)();
 
 
 // module
-exports.push([module.i, ".game__canvas__background{\r\n    position: relative;\r\n}\r\n.game__canvas__sprites{\r\n    position: absolute;\r\n    top: 0;\r\n    left: 0;\r\n}\r\n.game__canvas__background,\r\n.game__canvas__sprites{\r\n     -webkit-transform: translateZ(0);\r\n     transform: translateZ(0);\r\n}", ""]);
+exports.push([module.i, ".game__canvas__background{\n    position: relative;\n}\n.game__canvas__sprites{\n    position: absolute;\n    top: 0;\n    left: 0;\n}\n.game__canvas__background,\n.game__canvas__sprites{\n     -webkit-transform: translateZ(0);\n     transform: translateZ(0);\n}", ""]);
 
 // exports
 
@@ -2408,7 +2469,7 @@ module.exports = module.exports.toString();
 /***/ 477:
 /***/ (function(module, exports) {
 
-module.exports = "<div style=\"position: relative\">\r\n    <div id=\"game\" class=\"game__canvas__sprites\"></div>\r\n</div>"
+module.exports = "<div style=\"position: relative\">\n    <div id=\"game\" class=\"game__canvas__sprites\"></div>\n</div>"
 
 /***/ }),
 
