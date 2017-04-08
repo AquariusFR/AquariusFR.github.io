@@ -1,10 +1,10 @@
 webpackJsonp([1,5],{
 
-/***/ 276:
+/***/ 277:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(407);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(411);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _Entity; });
@@ -100,11 +100,58 @@ var _Entity = (function () {
 
 /***/ }),
 
-/***/ 277:
+/***/ 278:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(406);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return BitmapSprite; });
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var BitmapSprite = (function (_super) {
+    __extends(BitmapSprite, _super);
+    function BitmapSprite(key, position, game) {
+        _super.call(this, game, position.x, position.y - 32, key);
+        this.createBitMap()
+            .loadBitmapAsTextureAtlas()
+            .loadTexture(this.key.toString());
+    }
+    BitmapSprite.prototype.createBitMap = function () {
+        var game = this.game;
+        var cache = game.cache;
+        var cacheSpriteSheet = cache.getImage(this.key.toString(), true);
+        var bitmapBrother = game.add.bitmapData(cacheSpriteSheet.width, cacheSpriteSheet.height);
+        this.bitmapBrother = bitmapBrother;
+        this.frameData = cache.getJSON(this.key.toString() + '-atlas');
+        bitmapBrother.load(this.key.toString());
+        return this;
+    };
+    BitmapSprite.prototype.loadBitmapAsTextureAtlas = function (prefix) {
+        this.game.cache.addTextureAtlas(this.key.toString() + prefix, '', this.bitmapBrother.canvas, this.frameData, Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        return this;
+    };
+    BitmapSprite.prototype.modifiyBitmap = function () {
+        this.bitmapBrother.shiftHSL(0.1);
+        return this;
+    };
+    BitmapSprite.prototype.changeColor = function () {
+        this.modifiyBitmap()
+            .loadBitmapAsTextureAtlas('changed')
+            .loadTexture(this.key.toString() + 'changed');
+    };
+    return BitmapSprite;
+}(Phaser.Sprite));
+//# sourceMappingURL=D:/dev/_game_01-06/src/bitmapSprite.js.map
+
+/***/ }),
+
+/***/ 279:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(410);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WEAPONS; });
@@ -449,7 +496,111 @@ var WeaponPool = (function () {
 
 /***/ }),
 
-/***/ 294:
+/***/ 280:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var DelayedAnimation = (function (_super) {
+    __extends(DelayedAnimation, _super);
+    function DelayedAnimation() {
+        _super.apply(this, arguments);
+    }
+    DelayedAnimation.addToAnimations = function (animationManager, delay, name, frames, frameRate, loop, useNumericIndex) {
+        frames = frames || [];
+        frameRate = frameRate || 60;
+        if (loop === undefined) {
+            loop = false;
+        }
+        //  If they didn't set the useNumericIndex then let's at least try and guess it
+        if (useNumericIndex === undefined) {
+            if (frames && typeof frames[0] === 'number') {
+                useNumericIndex = true;
+            }
+            else {
+                useNumericIndex = false;
+            }
+        }
+        animationManager._outputFrames = [];
+        animationManager._frameData.getFrameIndexes(frames, useNumericIndex, animationManager._outputFrames);
+        var delayedAnimation = new DelayedAnimation(animationManager.game, animationManager.sprite, name, animationManager._frameData, animationManager._outputFrames, frameRate, loop);
+        delayedAnimation.timelineDelay = delay;
+        animationManager._anims[name] = delayedAnimation;
+        animationManager.currentAnim = animationManager._anims[name];
+        if (animationManager.sprite.tilingTexture) {
+            animationManager.sprite.refreshTexture = true;
+        }
+        return animationManager._anims[name];
+    };
+    DelayedAnimation.prototype.update = function () {
+        if (this.isPaused) {
+            return false;
+        }
+        if (this.isPlaying && this.game.time.time >= this._timeNextFrame) {
+            this._frameSkip = 1;
+            //  Lagging?
+            this._frameDiff = this.game.time.time - this._timeNextFrame + this.timelineDelay;
+            this._timeLastFrame = this.game.time.time;
+            if (this._frameDiff > this.delay) {
+                //  We need to skip a frame, work out how many
+                this._frameSkip = Math.floor(this._frameDiff / this.delay);
+                this._frameDiff -= (this._frameSkip * this.delay);
+            }
+            //  And what's left now?
+            this._timeNextFrame = this.game.time.time + (this.delay - this._frameDiff);
+            if (this.isReversed) {
+                this._frameIndex -= this._frameSkip;
+            }
+            else {
+                this._frameIndex += this._frameSkip;
+            }
+            if (!this.isReversed && this._frameIndex >= this._frames.length || this.isReversed && this._frameIndex <= -1) {
+                if (this.loop) {
+                    // Update current state before event callback
+                    this._frameIndex = Math.abs(this._frameIndex) % this._frames.length;
+                    if (this.isReversed) {
+                        this._frameIndex = this._frames.length - 1 - this._frameIndex;
+                    }
+                    this.currentFrame = this._frameData.getFrame(this._frames[this._frameIndex]);
+                    //  Instead of calling updateCurrentFrame we do it here instead
+                    if (this.currentFrame) {
+                        this._parent.setFrame(this.currentFrame);
+                    }
+                    this.loopCount++;
+                    this._parent.events.onAnimationLoop$dispatch(this._parent, this);
+                    this.onLoop.dispatch(this._parent, this);
+                    if (this.onUpdate) {
+                        this.onUpdate.dispatch(this, this.currentFrame);
+                        // False if the animation was destroyed from within a callback
+                        return !!this._frameData;
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                else {
+                    this.complete();
+                    return false;
+                }
+            }
+            else {
+                return this.updateCurrentFrame(true);
+            }
+        }
+        return false;
+    };
+    return DelayedAnimation;
+}(Phaser.Animation));
+/* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
+//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
+
+/***/ }),
+
+/***/ 296:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -458,20 +609,20 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 294;
+webpackEmptyContext.id = 296;
 
 
 /***/ }),
 
-/***/ 295:
+/***/ 297:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(384);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(405);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(419);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(388);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(409);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(422);
 
 
 
@@ -484,13 +635,13 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 404:
+/***/ 408:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(414);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(408);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(418);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(412);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -536,9 +687,9 @@ var AppComponent = (function () {
     AppComponent = __decorate([
         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["U" /* Component */])({
             selector: 'app-root',
-            template: __webpack_require__(477),
+            template: __webpack_require__(482),
             providers: [__WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */]],
-            styles: [__webpack_require__(473)]
+            styles: [__webpack_require__(476)]
         }), 
         __metadata('design:paramtypes', [(typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* ElementRef */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_0__angular_core__["C" /* ElementRef */]) === 'function' && _a) || Object, (typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */] !== 'undefined' && __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__["a" /* GameService */]) === 'function' && _b) || Object])
     ], AppComponent);
@@ -549,16 +700,16 @@ var AppComponent = (function () {
 
 /***/ }),
 
-/***/ 405:
+/***/ 409:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(167);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(168);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(375);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(163);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(413);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(404);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(379);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(417);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(408);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -599,7 +750,7 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ 406:
+/***/ 410:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -662,7 +813,7 @@ var Bullet = (function (_super) {
 
 /***/ }),
 
-/***/ 407:
+/***/ 411:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -676,15 +827,15 @@ var EntityType;
 
 /***/ }),
 
-/***/ 408:
+/***/ 412:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(410);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(412);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(409);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(416);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_game_weapon__ = __webpack_require__(277);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(414);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(416);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(413);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(419);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_game_weapon__ = __webpack_require__(279);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Game; });
 
 
@@ -717,10 +868,6 @@ var Game = (function () {
         this.playerTeam = new Array();
         this.ennemyTeam = new Array();
         this.zombieTeam = new Array();
-        this.addPlayer(5, 3);
-        this.addPlayer(6, 3)
-            .addWeapon(__WEBPACK_IMPORTED_MODULE_4_app_game_weapon__["a" /* WEAPONS */].SHOOTGUN)
-            .selectWeapon(1);
         this.addZombieAt(5, 7);
         this.addZombieAt(4, 8);
         this.addZombieAt(6, 8);
@@ -734,6 +881,10 @@ var Game = (function () {
         this.addZombieAt(37, 10);
         this.addZombieAt(38, 10);
         this.addZombieAt(21, 21);
+        this.addPlayer(5, 3);
+        this.addPlayer(6, 3)
+            .addWeapon(__WEBPACK_IMPORTED_MODULE_4_app_game_weapon__["a" /* WEAPONS */].SHOOTGUN)
+            .selectWeapon(1);
         this.currentIndex = -1;
         this.currentTeamId = this.playerTeamId;
         this.currentTeam = this.playerTeam;
@@ -770,6 +921,7 @@ var Game = (function () {
         }
         this.currentIndex = this.currentIndex + 1;
         this.currentEntity = this.currentTeam[this.currentIndex];
+        this.engine.setActivePlayer(this.currentEntity);
         this.currentEntity.currentAction = 0;
         this.engine.setGlowPosition(this.currentEntity.position);
         this.engine.removeAllAccessibleTiles();
@@ -945,7 +1097,7 @@ var Game = (function () {
 
 /***/ }),
 
-/***/ 409:
+/***/ 413:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1372,12 +1524,13 @@ var GameMap = (function () {
 
 /***/ }),
 
-/***/ 410:
+/***/ 414:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(276);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(277);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(277);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_bitmapSprite__ = __webpack_require__(278);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_weapon__ = __webpack_require__(279);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Player; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1386,12 +1539,20 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 
 
+
 var Player = (function (_super) {
     __extends(Player, _super);
     function Player(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
         this.game = game;
-        this.sprite = engine.createHuman(position);
+        this.sprite = new __WEBPACK_IMPORTED_MODULE_1_app_game_bitmapSprite__["a" /* BitmapSprite */]('heroes-sprites', position, engine.phaserGame);
+        this.sprite.animations.add("down", ["sprite1", "sprite2", "sprite3"], 5, true);
+        this.sprite.animations.add("left", ["sprite13", "sprite14", "sprite15"], 5, true);
+        this.sprite.animations.add("right", ["sprite25", "sprite26", "sprite27"], 5, true);
+        this.sprite.animations.add("up", ["sprite37", "sprite38", "sprite39"], 5, true);
+        this.sprite.animations.add("stand-down", ["sprite2"], 5, true);
+        this.sprite.play("stand-down");
+        engine.gamegroup.add(this.sprite);
         this.teamId = teamId;
         this.maxAction = 2;
         this.mouvementRange = 10;
@@ -1408,7 +1569,7 @@ var Player = (function (_super) {
     };
     Player.popPlayer = function (engine, position, teamId, team, game) {
         var newPlayer = new Player(engine, position, teamId, team, game);
-        newPlayer.addWeapon(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["a" /* WEAPONS */].NINEMM);
+        newPlayer.addWeapon(__WEBPACK_IMPORTED_MODULE_2_app_game_weapon__["a" /* WEAPONS */].NINEMM);
         return newPlayer;
     };
     Player.prototype.attack = function (target) {
@@ -1420,7 +1581,7 @@ var Player = (function (_super) {
         return this;
     };
     Player.prototype.addWeapon = function (weaponType) {
-        this.weapons.push(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["b" /* WeaponPool */].add(weaponType, this.game));
+        this.weapons.push(__WEBPACK_IMPORTED_MODULE_2_app_game_weapon__["b" /* WeaponPool */].add(weaponType, this.game));
         return this;
     };
     Player.prototype.selectWeapon = function (index) {
@@ -1433,11 +1594,11 @@ var Player = (function (_super) {
 
 /***/ }),
 
-/***/ 411:
+/***/ 415:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__ = __webpack_require__(418);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_phaser_spawnable__ = __webpack_require__(421);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return VisibilitySprite; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1461,19 +1622,23 @@ var VisibilitySprite = (function (_super) {
 
 /***/ }),
 
-/***/ 412:
+/***/ 416:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(276);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(277);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_bitmapSprite__ = __webpack_require__(278);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(280);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Zombie; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+
+
 
 
 var status;
@@ -1488,7 +1653,7 @@ var Zombie = (function (_super) {
     function Zombie(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
         this.game = game;
-        this.sprite = engine.createZombie(position, zombieTypes[__WEBPACK_IMPORTED_MODULE_1_lodash__["random"](0, zombieTypes.length - 1)]);
+        this.sprite = this.createZombie(position, zombieTypes[__WEBPACK_IMPORTED_MODULE_1_lodash__["random"](0, zombieTypes.length - 1)]);
         this.teamId = teamId;
         this.team = team;
         this.maxAction = 2;
@@ -1504,6 +1669,26 @@ var Zombie = (function (_super) {
     Zombie.popZombie = function (engine, position, teamId, team, game) {
         var newZombie = new Zombie(engine, position, teamId, team, game);
         return newZombie;
+    };
+    Zombie.prototype.createZombie = function (position, zombieType) {
+        var zombie = new __WEBPACK_IMPORTED_MODULE_2_app_game_bitmapSprite__["a" /* BitmapSprite */]('Male-Zombies-Gore', position, this.engine.phaserGame), framerate = 3;
+        zombie.smoothed = false;
+        //zombie.scale.setTo(1, this.engine.phaserGame.rnd.realInRange(0.9, 1.2))
+        var delay = this.engine.phaserGame.rnd.integerInRange(0, 50);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
+        zombie.animations.add("down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
+        zombie.animations.add("left", [zombieType + "-left-1", zombieType + "-left-2", zombieType + "-left-3"], framerate, true);
+        zombie.animations.add("right", [zombieType + "-right-1", zombieType + "-right-2", zombieType + "-right-3"], framerate, true);
+        zombie.animations.add("up", [zombieType + "-up-1", zombieType + "-up-2", zombieType + "-up-3"], framerate, true);
+        zombie.animations.add("masked-down", ["00-down-1", "00-down-2", "00-down-3"], framerate, true);
+        zombie.animations.add("masked-left", ["00-left-1", "00-left-2", "00-left-3"], framerate, true);
+        zombie.animations.add("masked-right", ["00-right-1", "00-right-2", "00-right-3"], framerate, true);
+        zombie.animations.add("masked-up", ["00-up-1", "00-up-2", "00-up-3"], framerate, true);
+        zombie.play("down");
+        var frameIndex = this.engine.phaserGame.rnd.integerInRange(0, zombie.animations.currentAnim.frameTotal);
+        zombie.animations.currentAnim.setFrame(frameIndex);
+        this.engine.gamegroup.add(zombie);
+        return zombie;
     };
     Zombie.prototype.play = function (callback) {
         var visibleEntities = this.visibleSquares.filter(function (square) { return square.entity; }).map(function (s) { return s.entity; });
@@ -1619,12 +1804,25 @@ var Zombie = (function (_super) {
     };
     Zombie.prototype.touched = function (sourceEntity, damage) {
         console.log('aaaargh', sourceEntity, 'hit me for', damage);
-        this.engine.playSound('grunt');
         this.pv = this.pv - damage;
         if (this.pv <= 0) {
             console.log('aaaargh, i am really dead');
             this.die(sourceEntity);
         }
+        return this;
+    };
+    Zombie.prototype.die = function (sourceEntity) {
+        var _this = this;
+        this.sprite.alive = false;
+        setTimeout(function () {
+            _this.engine.playSound('grunt');
+            //this.sprite.visible = false
+            /*this.sprite.changeColor();
+            this.setAnimation();*/
+            _this.sprite.animations.stop();
+            var index = __WEBPACK_IMPORTED_MODULE_1_lodash__(_this.team).remove(['id', _this.id]).value();
+            _this.game.setDead(_this, sourceEntity);
+        }, 10);
         return this;
     };
     return Zombie;
@@ -1633,12 +1831,12 @@ var Zombie = (function (_super) {
 
 /***/ }),
 
-/***/ 413:
+/***/ 417:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(163);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(164);
 /* unused harmony export DefaultRequestOptions */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return requestOptionsProvider; });
 var __extends = (this && this.__extends) || function (d, b) {
@@ -1680,13 +1878,13 @@ can be found in the LICENSE file at http://angular.io/license
 
 /***/ }),
 
-/***/ 414:
+/***/ 418:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(163);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__ = __webpack_require__(479);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__ = __webpack_require__(484);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_add_operator_map__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GameService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1777,119 +1975,15 @@ var GameService = (function () {
 
 /***/ }),
 
-/***/ 415:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var DelayedAnimation = (function (_super) {
-    __extends(DelayedAnimation, _super);
-    function DelayedAnimation() {
-        _super.apply(this, arguments);
-    }
-    DelayedAnimation.addToAnimations = function (animationManager, delay, name, frames, frameRate, loop, useNumericIndex) {
-        frames = frames || [];
-        frameRate = frameRate || 60;
-        if (loop === undefined) {
-            loop = false;
-        }
-        //  If they didn't set the useNumericIndex then let's at least try and guess it
-        if (useNumericIndex === undefined) {
-            if (frames && typeof frames[0] === 'number') {
-                useNumericIndex = true;
-            }
-            else {
-                useNumericIndex = false;
-            }
-        }
-        animationManager._outputFrames = [];
-        animationManager._frameData.getFrameIndexes(frames, useNumericIndex, animationManager._outputFrames);
-        var delayedAnimation = new DelayedAnimation(animationManager.game, animationManager.sprite, name, animationManager._frameData, animationManager._outputFrames, frameRate, loop);
-        delayedAnimation.timelineDelay = delay;
-        animationManager._anims[name] = delayedAnimation;
-        animationManager.currentAnim = animationManager._anims[name];
-        if (animationManager.sprite.tilingTexture) {
-            animationManager.sprite.refreshTexture = true;
-        }
-        return animationManager._anims[name];
-    };
-    DelayedAnimation.prototype.update = function () {
-        if (this.isPaused) {
-            return false;
-        }
-        if (this.isPlaying && this.game.time.time >= this._timeNextFrame) {
-            this._frameSkip = 1;
-            //  Lagging?
-            this._frameDiff = this.game.time.time - this._timeNextFrame + this.timelineDelay;
-            this._timeLastFrame = this.game.time.time;
-            if (this._frameDiff > this.delay) {
-                //  We need to skip a frame, work out how many
-                this._frameSkip = Math.floor(this._frameDiff / this.delay);
-                this._frameDiff -= (this._frameSkip * this.delay);
-            }
-            //  And what's left now?
-            this._timeNextFrame = this.game.time.time + (this.delay - this._frameDiff);
-            if (this.isReversed) {
-                this._frameIndex -= this._frameSkip;
-            }
-            else {
-                this._frameIndex += this._frameSkip;
-            }
-            if (!this.isReversed && this._frameIndex >= this._frames.length || this.isReversed && this._frameIndex <= -1) {
-                if (this.loop) {
-                    // Update current state before event callback
-                    this._frameIndex = Math.abs(this._frameIndex) % this._frames.length;
-                    if (this.isReversed) {
-                        this._frameIndex = this._frames.length - 1 - this._frameIndex;
-                    }
-                    this.currentFrame = this._frameData.getFrame(this._frames[this._frameIndex]);
-                    //  Instead of calling updateCurrentFrame we do it here instead
-                    if (this.currentFrame) {
-                        this._parent.setFrame(this.currentFrame);
-                    }
-                    this.loopCount++;
-                    this._parent.events.onAnimationLoop$dispatch(this._parent, this);
-                    this.onLoop.dispatch(this._parent, this);
-                    if (this.onUpdate) {
-                        this.onUpdate.dispatch(this, this.currentFrame);
-                        // False if the animation was destroyed from within a callback
-                        return !!this._frameData;
-                    }
-                    else {
-                        return true;
-                    }
-                }
-                else {
-                    this.complete();
-                    return false;
-                }
-            }
-            else {
-                return this.updateCurrentFrame(true);
-            }
-        }
-        return false;
-    };
-    return DelayedAnimation;
-}(Phaser.Animation));
-/* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
-//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
-
-/***/ }),
-
-/***/ 416:
+/***/ 419:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(417);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(411);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(415);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(420);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(415);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(280);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Engine; });
 
 
@@ -1964,6 +2058,8 @@ var Engine = (function () {
         //this.phaserGame.scale.setUserScale(2, 2);
         this.phaserGame.load.atlas('sprites', 'assets/sprites/spriteatlas/sprites.png', 'assets/sprites/spriteatlas/sprites.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.atlas('heroes-sprites', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        this.phaserGame.load.json('heroes-sprites-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json');
+        this.phaserGame.load.json('Male-Zombies-Gore-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json');
         this.phaserGame.load.atlas('Male-Zombies-Gore', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.atlas('markers', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.gameService.LoadTileMap(mapResponse, this.phaserGame);
@@ -1973,8 +2069,13 @@ var Engine = (function () {
         this.phaserGame.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.image('bullet8', 'assets/sprites/bullet8.png');
         this.phaserGame.load.image('bullet6', 'assets/sprites/bullet6.png');
+        this.phaserGame.load.image('menu-button', 'assets/ui/menu.png');
         this.phaserGame.load.atlas('energy-tank', 'assets/energy-tank_spritesheet.png', 'assets/energy-tank_spritesheet.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
         this.phaserGame.load.json('names', 'assets/names.json');
+        var javascriptedPlugins = Phaser.Plugin;
+        // You can use your own methods of making the plugin publicly available. Setting it as a global variable is the easiest solution.
+        this.slickUI = this.phaserGame.plugins.add(javascriptedPlugins.SlickUI);
+        this.slickUI.load('assets/ui/kenney/kenney.json'); // Use the path to your kenney.json. This is the file that defines your theme.
     };
     Engine.prototype.create = function (mapResponse) {
         var game = this.phaserGame;
@@ -2035,7 +2136,47 @@ var Engine = (function () {
         this.ihmGroup.add(this.energyTank);
         //this.gamegroup.scale.x = 2;
         //this.gamegroup.scale.y = 2;
+        this.createMenu();
         this.o.next('ok');
+    };
+    Engine.prototype.setActivePlayer = function (entity) {
+        this.currentPlayerName.value = entity.name;
+    };
+    Engine.prototype.createMenu = function () {
+        var game = this.phaserGame, slickUI = this.slickUI, panelVisiblePosition = 8, panelWidth = game.width - 8, openButtonWidth = 50, panelHiddenPosition = openButtonWidth - game.width, panel = new SlickUI.Element.Panel(panelHiddenPosition, game.height - 72, panelWidth, 64), closeButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), openButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), currentPlayerName = new SlickUI.Element.Text(10, 0, "BoyGeorge"), button = new SlickUI.Element.Button(390, 0, 140, 80), panelIsvisible = false;
+        slickUI.add(panel);
+        panel.add(openButton);
+        panel.add(closeButton);
+        panel.add(button);
+        panel.add(currentPlayerName).centerVertically().text.alpha = 0.5;
+        this.currentPlayerName = currentPlayerName;
+        closeButton.events.onInputUp.add(function () { console.log('Clicked button'); });
+        closeButton.add(new SlickUI.Element.Text(0, 0, "<<")).center();
+        closeButton.visible = false;
+        openButton.add(new SlickUI.Element.Text(0, 0, ">>")).center();
+        button.events.onInputUp.add(function () { console.log('Clicked button'); });
+        button.add(new SlickUI.Element.Text(0, 0, "My button")).center();
+        openButton.events.onInputDown.add(function () {
+            if (panelIsvisible) {
+                return;
+            }
+            panelIsvisible = true;
+            panel.x = panelHiddenPosition;
+            openButton.visible = false;
+            closeButton.visible = true;
+            game.add.tween(panel).to({ x: panelVisiblePosition }, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
+            });
+            slickUI.container.displayGroup.bringToTop(panel.container.displayGroup);
+        }, this);
+        closeButton.events.onInputUp.add(function () {
+            game.add.tween(panel).to({ x: panelHiddenPosition + 20 }, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
+                panelIsvisible = false;
+                panel.x = panelHiddenPosition;
+            });
+            openButton.visible = true;
+            closeButton.visible = false;
+        });
+        return this;
     };
     Engine.prototype.pickName = function () {
         var rndIndex = this.phaserGame.rnd.integerInRange(0, this.namesJson.length - 1);
@@ -2361,7 +2502,7 @@ var Engine = (function () {
 
 /***/ }),
 
-/***/ 417:
+/***/ 420:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2405,7 +2546,7 @@ var Pool = (function (_super) {
 
 /***/ }),
 
-/***/ 418:
+/***/ 421:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2432,7 +2573,7 @@ var Spawnable = (function (_super) {
 
 /***/ }),
 
-/***/ 419:
+/***/ 422:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2448,10 +2589,10 @@ var environment = {
 
 /***/ }),
 
-/***/ 473:
+/***/ 476:
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(191)();
+exports = module.exports = __webpack_require__(192)();
 // imports
 
 
@@ -2466,20 +2607,20 @@ module.exports = module.exports.toString();
 
 /***/ }),
 
-/***/ 477:
+/***/ 482:
 /***/ (function(module, exports) {
 
 module.exports = "<div style=\"position: relative\">\n    <div id=\"game\" class=\"game__canvas__sprites\"></div>\n</div>"
 
 /***/ }),
 
-/***/ 493:
+/***/ 498:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(295);
+module.exports = __webpack_require__(297);
 
 
 /***/ })
 
-},[493]);
+},[498]);
 //# sourceMappingURL=main.bundle.js.map
