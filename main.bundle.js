@@ -4,8 +4,8 @@ webpackJsonp([1,5],{
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(411);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(409);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return _Entity; });
 
@@ -104,55 +104,8 @@ var _Entity = (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return BitmapSprite; });
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var BitmapSprite = (function (_super) {
-    __extends(BitmapSprite, _super);
-    function BitmapSprite(key, position, game) {
-        _super.call(this, game, position.x, position.y - 32, key);
-        this.createBitMap()
-            .loadBitmapAsTextureAtlas()
-            .loadTexture(this.key.toString());
-    }
-    BitmapSprite.prototype.createBitMap = function () {
-        var game = this.game;
-        var cache = game.cache;
-        var cacheSpriteSheet = cache.getImage(this.key.toString(), true);
-        var bitmapBrother = game.add.bitmapData(cacheSpriteSheet.width, cacheSpriteSheet.height);
-        this.bitmapBrother = bitmapBrother;
-        this.frameData = cache.getJSON(this.key.toString() + '-atlas');
-        bitmapBrother.load(this.key.toString());
-        return this;
-    };
-    BitmapSprite.prototype.loadBitmapAsTextureAtlas = function (prefix) {
-        this.game.cache.addTextureAtlas(this.key.toString() + prefix, '', this.bitmapBrother.canvas, this.frameData, Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
-        return this;
-    };
-    BitmapSprite.prototype.modifiyBitmap = function () {
-        this.bitmapBrother.shiftHSL(0.1);
-        return this;
-    };
-    BitmapSprite.prototype.changeColor = function () {
-        this.modifiyBitmap()
-            .loadBitmapAsTextureAtlas('changed')
-            .loadTexture(this.key.toString() + 'changed');
-    };
-    return BitmapSprite;
-}(Phaser.Sprite));
-//# sourceMappingURL=D:/dev/_game_01-06/src/bitmapSprite.js.map
-
-/***/ }),
-
-/***/ 279:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(410);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_bullet__ = __webpack_require__(408);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WEAPONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return WeaponPool; });
@@ -191,7 +144,6 @@ var WeaponImpl = (function () {
         this.bulletSpeed = 700;
         if (this.isJammed) {
             console.log('weapon jammed !!!!');
-            return;
         }
         if (this.data.isRanged) {
             if (this.data.currentAmmo > 0) {
@@ -496,111 +448,7 @@ var WeaponPool = (function () {
 
 /***/ }),
 
-/***/ 280:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var DelayedAnimation = (function (_super) {
-    __extends(DelayedAnimation, _super);
-    function DelayedAnimation() {
-        _super.apply(this, arguments);
-    }
-    DelayedAnimation.addToAnimations = function (animationManager, delay, name, frames, frameRate, loop, useNumericIndex) {
-        frames = frames || [];
-        frameRate = frameRate || 60;
-        if (loop === undefined) {
-            loop = false;
-        }
-        //  If they didn't set the useNumericIndex then let's at least try and guess it
-        if (useNumericIndex === undefined) {
-            if (frames && typeof frames[0] === 'number') {
-                useNumericIndex = true;
-            }
-            else {
-                useNumericIndex = false;
-            }
-        }
-        animationManager._outputFrames = [];
-        animationManager._frameData.getFrameIndexes(frames, useNumericIndex, animationManager._outputFrames);
-        var delayedAnimation = new DelayedAnimation(animationManager.game, animationManager.sprite, name, animationManager._frameData, animationManager._outputFrames, frameRate, loop);
-        delayedAnimation.timelineDelay = delay;
-        animationManager._anims[name] = delayedAnimation;
-        animationManager.currentAnim = animationManager._anims[name];
-        if (animationManager.sprite.tilingTexture) {
-            animationManager.sprite.refreshTexture = true;
-        }
-        return animationManager._anims[name];
-    };
-    DelayedAnimation.prototype.update = function () {
-        if (this.isPaused) {
-            return false;
-        }
-        if (this.isPlaying && this.game.time.time >= this._timeNextFrame) {
-            this._frameSkip = 1;
-            //  Lagging?
-            this._frameDiff = this.game.time.time - this._timeNextFrame + this.timelineDelay;
-            this._timeLastFrame = this.game.time.time;
-            if (this._frameDiff > this.delay) {
-                //  We need to skip a frame, work out how many
-                this._frameSkip = Math.floor(this._frameDiff / this.delay);
-                this._frameDiff -= (this._frameSkip * this.delay);
-            }
-            //  And what's left now?
-            this._timeNextFrame = this.game.time.time + (this.delay - this._frameDiff);
-            if (this.isReversed) {
-                this._frameIndex -= this._frameSkip;
-            }
-            else {
-                this._frameIndex += this._frameSkip;
-            }
-            if (!this.isReversed && this._frameIndex >= this._frames.length || this.isReversed && this._frameIndex <= -1) {
-                if (this.loop) {
-                    // Update current state before event callback
-                    this._frameIndex = Math.abs(this._frameIndex) % this._frames.length;
-                    if (this.isReversed) {
-                        this._frameIndex = this._frames.length - 1 - this._frameIndex;
-                    }
-                    this.currentFrame = this._frameData.getFrame(this._frames[this._frameIndex]);
-                    //  Instead of calling updateCurrentFrame we do it here instead
-                    if (this.currentFrame) {
-                        this._parent.setFrame(this.currentFrame);
-                    }
-                    this.loopCount++;
-                    this._parent.events.onAnimationLoop$dispatch(this._parent, this);
-                    this.onLoop.dispatch(this._parent, this);
-                    if (this.onUpdate) {
-                        this.onUpdate.dispatch(this, this.currentFrame);
-                        // False if the animation was destroyed from within a callback
-                        return !!this._frameData;
-                    }
-                    else {
-                        return true;
-                    }
-                }
-                else {
-                    this.complete();
-                    return false;
-                }
-            }
-            else {
-                return this.updateCurrentFrame(true);
-            }
-        }
-        return false;
-    };
-    return DelayedAnimation;
-}(Phaser.Animation));
-/* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
-//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
-
-/***/ }),
-
-/***/ 296:
+/***/ 294:
 /***/ (function(module, exports) {
 
 function webpackEmptyContext(req) {
@@ -609,19 +457,19 @@ function webpackEmptyContext(req) {
 webpackEmptyContext.keys = function() { return []; };
 webpackEmptyContext.resolve = webpackEmptyContext;
 module.exports = webpackEmptyContext;
-webpackEmptyContext.id = 296;
+webpackEmptyContext.id = 294;
 
 
 /***/ }),
 
-/***/ 297:
+/***/ 295:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(388);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(409);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dynamic__ = __webpack_require__(386);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_app_module__ = __webpack_require__(407);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__environments_environment__ = __webpack_require__(422);
 
 
@@ -635,13 +483,13 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 
 /***/ }),
 
-/***/ 408:
+/***/ 406:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(418);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(412);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_loader_game_service__ = __webpack_require__(416);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_game__ = __webpack_require__(410);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -700,16 +548,16 @@ var AppComponent = (function () {
 
 /***/ }),
 
-/***/ 409:
+/***/ 407:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(168);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(379);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(377);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(164);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(417);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(408);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__loader_default_request_options_service__ = __webpack_require__(415);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(406);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -750,7 +598,7 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ 410:
+/***/ 408:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -813,7 +661,7 @@ var Bullet = (function (_super) {
 
 /***/ }),
 
-/***/ 411:
+/***/ 409:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -827,15 +675,15 @@ var EntityType;
 
 /***/ }),
 
-/***/ 412:
+/***/ 410:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(414);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(416);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(413);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(419);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_game_weapon__ = __webpack_require__(279);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_player__ = __webpack_require__(412);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_zombie__ = __webpack_require__(414);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_map__ = __webpack_require__(411);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_engine__ = __webpack_require__(418);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_game_weapon__ = __webpack_require__(278);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Game; });
 
 
@@ -868,8 +716,8 @@ var Game = (function () {
         this.playerTeam = new Array();
         this.ennemyTeam = new Array();
         this.zombieTeam = new Array();
-        this.addZombieAt(5, 7);
-        this.addZombieAt(4, 8);
+        this.addZombieAt(12, 10);
+        this.addZombieAt(14, 7);
         this.addZombieAt(6, 8);
         this.addZombieAt(5, 8);
         this.addZombieAt(28, 17);
@@ -881,7 +729,7 @@ var Game = (function () {
         this.addZombieAt(37, 10);
         this.addZombieAt(38, 10);
         this.addZombieAt(21, 21);
-        this.addPlayer(5, 3);
+        this.addPlayer(5, 3).maxAction = 16;
         this.addPlayer(6, 3)
             .addWeapon(__WEBPACK_IMPORTED_MODULE_4_app_game_weapon__["a" /* WEAPONS */].SHOOTGUN)
             .selectWeapon(1);
@@ -1097,11 +945,11 @@ var Game = (function () {
 
 /***/ }),
 
-/***/ 413:
+/***/ 411:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return GameMap; });
 
@@ -1524,13 +1372,12 @@ var GameMap = (function () {
 
 /***/ }),
 
-/***/ 414:
+/***/ 412:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(277);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_bitmapSprite__ = __webpack_require__(278);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_weapon__ = __webpack_require__(279);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_game_weapon__ = __webpack_require__(278);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Player; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1539,13 +1386,13 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 
 
-
 var Player = (function (_super) {
     __extends(Player, _super);
     function Player(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
         this.game = game;
-        this.sprite = new __WEBPACK_IMPORTED_MODULE_1_app_game_bitmapSprite__["a" /* BitmapSprite */]('heroes-sprites', position, engine.phaserGame);
+        this.sprite = engine.createHuman(position);
+        //this.sprite = new BitmapSprite('heroes-sprites', position, engine.phaserGame);
         this.sprite.animations.add("down", ["sprite1", "sprite2", "sprite3"], 5, true);
         this.sprite.animations.add("left", ["sprite13", "sprite14", "sprite15"], 5, true);
         this.sprite.animations.add("right", ["sprite25", "sprite26", "sprite27"], 5, true);
@@ -1569,7 +1416,7 @@ var Player = (function (_super) {
     };
     Player.popPlayer = function (engine, position, teamId, team, game) {
         var newPlayer = new Player(engine, position, teamId, team, game);
-        newPlayer.addWeapon(__WEBPACK_IMPORTED_MODULE_2_app_game_weapon__["a" /* WEAPONS */].NINEMM);
+        newPlayer.addWeapon(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["a" /* WEAPONS */].NINEMM);
         return newPlayer;
     };
     Player.prototype.attack = function (target) {
@@ -1581,7 +1428,7 @@ var Player = (function (_super) {
         return this;
     };
     Player.prototype.addWeapon = function (weaponType) {
-        this.weapons.push(__WEBPACK_IMPORTED_MODULE_2_app_game_weapon__["b" /* WeaponPool */].add(weaponType, this.game));
+        this.weapons.push(__WEBPACK_IMPORTED_MODULE_1_app_game_weapon__["b" /* WeaponPool */].add(weaponType, this.game));
         return this;
     };
     Player.prototype.selectWeapon = function (index) {
@@ -1594,7 +1441,7 @@ var Player = (function (_super) {
 
 /***/ }),
 
-/***/ 415:
+/***/ 413:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1622,23 +1469,19 @@ var VisibilitySprite = (function (_super) {
 
 /***/ }),
 
-/***/ 416:
+/***/ 414:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_app_game_entity__ = __webpack_require__(277);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(120);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash__ = __webpack_require__(78);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_lodash__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_bitmapSprite__ = __webpack_require__(278);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(280);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Zombie; });
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-
-
 
 
 var status;
@@ -1653,7 +1496,8 @@ var Zombie = (function (_super) {
     function Zombie(engine, position, teamId, team, game) {
         _super.call(this, engine, position);
         this.game = game;
-        this.sprite = this.createZombie(position, zombieTypes[__WEBPACK_IMPORTED_MODULE_1_lodash__["random"](0, zombieTypes.length - 1)]);
+        //this.sprite = this.createZombie(position);
+        this.sprite = engine.createZombie(position, zombieTypes[__WEBPACK_IMPORTED_MODULE_1_lodash__["random"](0, zombieTypes.length - 1)]);
         this.teamId = teamId;
         this.team = team;
         this.maxAction = 2;
@@ -1669,26 +1513,6 @@ var Zombie = (function (_super) {
     Zombie.popZombie = function (engine, position, teamId, team, game) {
         var newZombie = new Zombie(engine, position, teamId, team, game);
         return newZombie;
-    };
-    Zombie.prototype.createZombie = function (position, zombieType) {
-        var zombie = new __WEBPACK_IMPORTED_MODULE_2_app_game_bitmapSprite__["a" /* BitmapSprite */]('Male-Zombies-Gore', position, this.engine.phaserGame), framerate = 3;
-        zombie.smoothed = false;
-        //zombie.scale.setTo(1, this.engine.phaserGame.rnd.realInRange(0.9, 1.2))
-        var delay = this.engine.phaserGame.rnd.integerInRange(0, 50);
-        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
-        zombie.animations.add("down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
-        zombie.animations.add("left", [zombieType + "-left-1", zombieType + "-left-2", zombieType + "-left-3"], framerate, true);
-        zombie.animations.add("right", [zombieType + "-right-1", zombieType + "-right-2", zombieType + "-right-3"], framerate, true);
-        zombie.animations.add("up", [zombieType + "-up-1", zombieType + "-up-2", zombieType + "-up-3"], framerate, true);
-        zombie.animations.add("masked-down", ["00-down-1", "00-down-2", "00-down-3"], framerate, true);
-        zombie.animations.add("masked-left", ["00-left-1", "00-left-2", "00-left-3"], framerate, true);
-        zombie.animations.add("masked-right", ["00-right-1", "00-right-2", "00-right-3"], framerate, true);
-        zombie.animations.add("masked-up", ["00-up-1", "00-up-2", "00-up-3"], framerate, true);
-        zombie.play("down");
-        var frameIndex = this.engine.phaserGame.rnd.integerInRange(0, zombie.animations.currentAnim.frameTotal);
-        zombie.animations.currentAnim.setFrame(frameIndex);
-        this.engine.gamegroup.add(zombie);
-        return zombie;
     };
     Zombie.prototype.play = function (callback) {
         var visibleEntities = this.visibleSquares.filter(function (square) { return square.entity; }).map(function (s) { return s.entity; });
@@ -1831,7 +1655,7 @@ var Zombie = (function (_super) {
 
 /***/ }),
 
-/***/ 417:
+/***/ 415:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1878,7 +1702,7 @@ can be found in the LICENSE file at http://angular.io/license
 
 /***/ }),
 
-/***/ 418:
+/***/ 416:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1908,6 +1732,18 @@ var GameService = (function () {
         //assets/tiles/map00.json
         return this.http.get('assets/tiles/' + mapKey + '.json').map(function (response) { return _this.buildMapResponse(mapKey, response); });
     };
+    GameService.prototype.getTileSet = function (mapKey, json) {
+        var tileset = json, tilesets = tileset.tilesets, layers = tileset.layers;
+        return {
+            name: mapKey,
+            data: tileset,
+            layers: layers,
+            tilesetImages: tilesets.map(function (s) { return {
+                url: 'assets/tiles/' + s.image,
+                key: s.name
+            }; })
+        };
+    };
     GameService.prototype.buildMapResponse = function (mapKey, response) {
         var json = response.json(), tilesets = json.tilesets, layers = json.layers;
         return {
@@ -1925,6 +1761,10 @@ var GameService = (function () {
         mapResponse.tilesetImages.forEach(function (t) {
             game.load.image(t.key, t.url);
         });
+    };
+    GameService.prototype.createFromJson = function (game, group) {
+        var tilesetJson = game.cache.getJSON('tileset'), map = this.getTileSet('zombie', tilesetJson);
+        return this.create(map, game, group);
     };
     GameService.prototype.create = function (mapResponse, game, group) {
         var map = game.add.tilemap(mapResponse.name, 16, 16);
@@ -1961,7 +1801,8 @@ var GameService = (function () {
         return {
             map: map,
             layers: layers,
-            tileMap: tilePropertyMap
+            tileMap: tilePropertyMap,
+            json: mapResponse.data
         };
     };
     GameService = __decorate([
@@ -1975,16 +1816,122 @@ var GameService = (function () {
 
 /***/ }),
 
-/***/ 419:
+/***/ 417:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+var DelayedAnimation = (function (_super) {
+    __extends(DelayedAnimation, _super);
+    function DelayedAnimation() {
+        _super.apply(this, arguments);
+    }
+    DelayedAnimation.addToAnimations = function (animationManager, delay, name, frames, frameRate, loop, useNumericIndex) {
+        frames = frames || [];
+        frameRate = frameRate || 60;
+        if (loop === undefined) {
+            loop = false;
+        }
+        //  If they didn't set the useNumericIndex then let's at least try and guess it
+        if (useNumericIndex === undefined) {
+            if (frames && typeof frames[0] === 'number') {
+                useNumericIndex = true;
+            }
+            else {
+                useNumericIndex = false;
+            }
+        }
+        animationManager._outputFrames = [];
+        animationManager._frameData.getFrameIndexes(frames, useNumericIndex, animationManager._outputFrames);
+        var delayedAnimation = new DelayedAnimation(animationManager.game, animationManager.sprite, name, animationManager._frameData, animationManager._outputFrames, frameRate, loop);
+        delayedAnimation.timelineDelay = delay;
+        animationManager._anims[name] = delayedAnimation;
+        animationManager.currentAnim = animationManager._anims[name];
+        if (animationManager.sprite.tilingTexture) {
+            animationManager.sprite.refreshTexture = true;
+        }
+        return animationManager._anims[name];
+    };
+    DelayedAnimation.prototype.update = function () {
+        if (this.isPaused) {
+            return false;
+        }
+        if (this.isPlaying && this.game.time.time >= this._timeNextFrame) {
+            this._frameSkip = 1;
+            //  Lagging?
+            this._frameDiff = this.game.time.time - this._timeNextFrame + this.timelineDelay;
+            this._timeLastFrame = this.game.time.time;
+            if (this._frameDiff > this.delay) {
+                //  We need to skip a frame, work out how many
+                this._frameSkip = Math.floor(this._frameDiff / this.delay);
+                this._frameDiff -= (this._frameSkip * this.delay);
+            }
+            //  And what's left now?
+            this._timeNextFrame = this.game.time.time + (this.delay - this._frameDiff);
+            if (this.isReversed) {
+                this._frameIndex -= this._frameSkip;
+            }
+            else {
+                this._frameIndex += this._frameSkip;
+            }
+            if (!this.isReversed && this._frameIndex >= this._frames.length || this.isReversed && this._frameIndex <= -1) {
+                if (this.loop) {
+                    // Update current state before event callback
+                    this._frameIndex = Math.abs(this._frameIndex) % this._frames.length;
+                    if (this.isReversed) {
+                        this._frameIndex = this._frames.length - 1 - this._frameIndex;
+                    }
+                    this.currentFrame = this._frameData.getFrame(this._frames[this._frameIndex]);
+                    //  Instead of calling updateCurrentFrame we do it here instead
+                    if (this.currentFrame) {
+                        this._parent.setFrame(this.currentFrame);
+                    }
+                    this.loopCount++;
+                    this._parent.events.onAnimationLoop$dispatch(this._parent, this);
+                    this.onLoop.dispatch(this._parent, this);
+                    if (this.onUpdate) {
+                        this.onUpdate.dispatch(this, this.currentFrame);
+                        // False if the animation was destroyed from within a callback
+                        return !!this._frameData;
+                    }
+                    else {
+                        return true;
+                    }
+                }
+                else {
+                    this.complete();
+                    return false;
+                }
+            }
+            else {
+                return this.updateCurrentFrame(true);
+            }
+        }
+        return false;
+    };
+    return DelayedAnimation;
+}(Phaser.Animation));
+/* harmony default export */ __webpack_exports__["a"] = DelayedAnimation;
+//# sourceMappingURL=D:/dev/_game_01-06/src/delayedAnimation.js.map
+
+/***/ }),
+
+/***/ 418:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__ = __webpack_require__(38);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_app_phaser_pool__ = __webpack_require__(420);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(415);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(280);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_app_game_visibilitySprite__ = __webpack_require__(413);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__ = __webpack_require__(417);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_app_phaser_layerToSprites__ = __webpack_require__(419);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Engine; });
+
 
 
 
@@ -2015,6 +1962,7 @@ var Engine = (function () {
         this.kineticMovement = true;
         this.speed = 300;
         this.debug = true;
+        this.layerToSprites = new __WEBPACK_IMPORTED_MODULE_4_app_phaser_layerToSprites__["a" /* LayerToSprites */]();
         this.overTimer = {
             key: '',
             time: -1,
@@ -2053,29 +2001,33 @@ var Engine = (function () {
         //this.phaserGame.camera.flash(0xffffff, 50, false, 0.7);
     };
     Engine.prototype.preload = function (mapResponse) {
+        var game = this.phaserGame;
         Phaser.Canvas.setImageRenderingCrisp(this.phaserGame.canvas);
         //this.phaserGame.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
         //this.phaserGame.scale.setUserScale(2, 2);
-        this.phaserGame.load.atlas('sprites', 'assets/sprites/spriteatlas/sprites.png', 'assets/sprites/spriteatlas/sprites.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
-        this.phaserGame.load.atlas('heroes-sprites', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
-        this.phaserGame.load.json('heroes-sprites-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json');
-        this.phaserGame.load.json('Male-Zombies-Gore-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json');
-        this.phaserGame.load.atlas('Male-Zombies-Gore', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
-        this.phaserGame.load.atlas('markers', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.atlas('sprites', 'assets/sprites/spriteatlas/sprites.png', 'assets/sprites/spriteatlas/sprites.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.atlas('heroes-sprites', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.json('heroes-sprites-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Heroes.json');
+        game.load.json('Male-Zombies-Gore-atlas', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json');
+        game.load.atlas('Male-Zombies-Gore', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Male_Zombies_Gore.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.atlas('markers', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/System/markers.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.audio('boden', ['assets/sounds/essai.mp3']);
+        game.load.audio('MechDrone1', ['assets/sounds/MechDrone1.mp3']);
+        game.load.audio('soundeffect', ['assets/sounds/soundeffect_game.ogg']);
+        game.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.image('bullet8', 'assets/sprites/bullet8.png');
+        game.load.image('bullet6', 'assets/sprites/bullet6.png');
+        game.load.image('menu-button', 'assets/ui/menu.png');
+        game.load.atlas('energy-tank', 'assets/energy-tank_spritesheet.png', 'assets/energy-tank_spritesheet.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
+        game.load.json('names', 'assets/names.json');
+        game.load.json('tileset', 'assets/tiles/' + mapResponse.name + '.json');
+        //game.load.spritesheet("tilesetname", "tileset_path", tilewidth, tileheight, frameMax)
         this.gameService.LoadTileMap(mapResponse, this.phaserGame);
-        this.phaserGame.load.audio('boden', ['assets/sounds/essai.mp3']);
-        this.phaserGame.load.audio('MechDrone1', ['assets/sounds/MechDrone1.mp3']);
-        this.phaserGame.load.audio('soundeffect', ['assets/sounds/soundeffect_game.ogg']);
-        this.phaserGame.load.atlas('candle-glow', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.png', 'assets/tiles/POPHorrorCity_GFX/Graphics/Characters/Objects/Candle_Glow.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
-        this.phaserGame.load.image('bullet8', 'assets/sprites/bullet8.png');
-        this.phaserGame.load.image('bullet6', 'assets/sprites/bullet6.png');
-        this.phaserGame.load.image('menu-button', 'assets/ui/menu.png');
-        this.phaserGame.load.atlas('energy-tank', 'assets/energy-tank_spritesheet.png', 'assets/energy-tank_spritesheet.json', Phaser.Loader.TEXTURE_ATLAS_JSON_ARRAY);
-        this.phaserGame.load.json('names', 'assets/names.json');
         var javascriptedPlugins = Phaser.Plugin;
         // You can use your own methods of making the plugin publicly available. Setting it as a global variable is the easiest solution.
         this.slickUI = this.phaserGame.plugins.add(javascriptedPlugins.SlickUI);
         this.slickUI.load('assets/ui/kenney/kenney.json'); // Use the path to your kenney.json. This is the file that defines your theme.
+        // test
     };
     Engine.prototype.create = function (mapResponse) {
         var game = this.phaserGame;
@@ -2099,10 +2051,10 @@ var Engine = (function () {
         soundeffect.addMarker('grunt', 0, 0.570);
         this.soundeffect = soundeffect;
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        var createdMap = this.gameService.create(mapResponse, game, this.tileGroup);
-        var collisionLayer = createdMap.layers.get('collisions');
-        this.map = createdMap.map;
-        this.tileMap = createdMap.tileMap;
+        var map = this.gameService.createFromJson(game, this.tileGroup);
+        var collisionLayer = map.layers.get('collisions');
+        this.map = map.map;
+        this.tileMap = map.tileMap;
         this.collisionLayer = collisionLayer;
         //this.map.setCollisionByExclusion([], true, this.collisionLayer);
         this.collisionLayer.resizeWorld();
@@ -2123,7 +2075,7 @@ var Engine = (function () {
         this.glow.animations.add("glow", ["marker/active_entity"], 5, true);
         this.glow.play("glow");
         game.physics.enable(this.glow, Phaser.Physics.ARCADE);
-        var lastLayer = createdMap.layers.get('example sprite');
+        var lastLayer = map.layers.get('example sprite');
         lastLayer.inputEnabled = true;
         lastLayer.events.onInputDown.add(this.clickListener, this);
         if (this.debug) {
@@ -2136,31 +2088,216 @@ var Engine = (function () {
         this.ihmGroup.add(this.energyTank);
         //this.gamegroup.scale.x = 2;
         //this.gamegroup.scale.y = 2;
+        this.placeMapSprite(map);
         this.createMenu();
         this.o.next('ok');
+        game.input.addMoveCallback(this.setMarker, this);
+    };
+    Engine.prototype.placeMapSprite = function (map) {
+        var game = this.phaserGame, layer = map.layers.get('sprites');
+        this.layerToSprites.placeMapSprite(layer, map.map, map.json, this.gamegroup, game);
+        /*
+                let game = this.phaserGame,
+                    layer: any = map.layers.get('sprites'),
+                    spriteData: any = _(map.json.layers).find((l) => l.name == 'sprites'),
+                    spritesInfo = _(spriteData.data)
+                        .map((x, index) =>
+                            x > 0 ? <tileInfo>{ index: index, id: x } : null
+                        )
+                        .filter(x => x).value();
+        
+                this.layerToSprites.placeMapSprite(layer, map.map, this.gamegroup, game);
+                let tilewidth = map.map.tileWidth,
+                    tileheight = map.map.tileHeight,
+                    w = layer.width,
+                    h = layer.height,
+                    tileSprites = new Array<Array<tileInfo>>();
+                let rightTileIsSameGroup = (tileset: Phaser.Tileset, spriteInfo: {
+                    index: any;
+                    id: any;
+                }) => {
+                    return spriteData.data[spriteInfo.index + 1] == spriteInfo.id + 1
+                }
+                let bottomTileIsSameGroup = (tileset: Phaser.Tileset, spriteInfo: {
+                    index: any;
+                    id: any;
+                }) => {
+                    return spriteData.data[spriteInfo.index + 100] == spriteInfo.id + tileset.columns
+                }
+        
+                let processedTiles = {},
+                    tileSpriteFramesData = new Map<string, {
+                        'frames': Array<frameAtlas>,
+                        'image': any
+                    }>();
+        
+                for (var index = 0; index < spriteData.data.length; index++) {
+        
+                    let id = spriteData.data[index];
+        
+                    if (id == 0 || processedTiles[index]) {
+                        continue;
+                    }
+                    let spriteInfo = {
+                        index: index,
+                        id: id
+                    }
+        
+                    // layerSprites
+                    let row = Math.floor(spriteInfo.index / 100),
+                        column = spriteInfo.index % 100;
+        
+                    let currentLayerSprite = new Array<{ index: number, id: number }>();
+        
+                    //currentLayerSprite.push(spriteInfo);
+        
+                    //checkIfTilesAround
+                    let tilesRightId = spriteInfo.index,
+                        tilesBottomId = spriteInfo.index;
+        
+                    let tileset = _(map.map.tilesets).find(t => t.containsTileIndex(spriteInfo.id));
+                    let currentSpriteInfo = spriteInfo;
+        
+                    //currentLayerSprite.push(currentSpriteInfo);
+        
+                    let continueReadingRight = true,
+                        continueReadingBottom = true,
+                        spritewidth = 0,
+                        spriteheight = 0;
+        
+                    while (continueReadingRight) {
+        
+                        spritewidth++;
+        
+                        let bottomSpriteInfo = {
+                            index: currentSpriteInfo.index,
+                            id: spriteData.data[currentSpriteInfo.index]
+                        };
+                        continueReadingBottom = bottomTileIsSameGroup(tileset, bottomSpriteInfo);
+        
+                        let currentspriteheight = 0
+        
+                        while (continueReadingBottom) {
+        
+                            currentspriteheight++;
+                            currentLayerSprite.push(bottomSpriteInfo);
+        
+                            processedTiles[bottomSpriteInfo.index] = true;
+        
+                            continueReadingBottom = bottomTileIsSameGroup(tileset, bottomSpriteInfo);
+                            bottomSpriteInfo = {
+                                index: bottomSpriteInfo.index + 100,
+                                id: spriteData.data[bottomSpriteInfo.index + 100]
+                            }
+                        }
+        
+                        if(currentspriteheight>spriteheight){
+                            spriteheight = currentspriteheight
+                        }
+        
+                        continueReadingRight = rightTileIsSameGroup(tileset, currentSpriteInfo);
+        
+                        currentSpriteInfo = {
+                            index: currentSpriteInfo.index + 1,
+                            id: spriteData.data[currentSpriteInfo.index + 1]
+                        };
+                    }
+        
+        
+                    if (currentLayerSprite.length) {
+                        let tilesetRaw: any = tileset,
+                        
+                            currentgid = currentLayerSprite[0].id - tileset.firstgid,
+                            tilex = tilesetRaw.drawCoords[currentgid * 2],
+                            tiley = tilesetRaw.drawCoords[1 + (currentgid * 2)],
+                            spritewidthPixel = spritewidth * tilewidth,
+                            spriteHeightPixel = spriteheight * tileheight,
+                            spriteFrameAtlas: frameAtlas = {
+        
+                                filename: currentLayerSprite[0].id.toString(),
+                                frame: {
+                                    x: tilex,
+                                    y: tiley,
+                                    w: spritewidthPixel,
+                                    h: spriteHeightPixel
+                                },
+                                rotated: false,
+                                trimmed: false,
+                                spriteSourceSize: {
+                                    x: tilex,
+                                    y: tiley,
+                                    w: spritewidthPixel,
+                                    h: spriteHeightPixel
+                                },
+                                sourceSize: {
+                                    w: spritewidthPixel,
+                                    h: spriteHeightPixel
+                                }
+                            }
+        
+                        if (!tileSpriteFramesData.has(tileset.name)) {
+        
+                            let newFrameAtlas = {
+                                frames: new Array<frameAtlas>(),
+                                image: tileset.image
+                            };
+        
+                            tileSpriteFramesData.set(tileset.name, newFrameAtlas);
+                        }
+        
+        
+                        tileSpriteFramesData
+                            .get(tileset.name)
+                            .frames.push(spriteFrameAtlas);
+        
+                        tileSprites.push(currentLayerSprite);
+                    }
+                }
+        
+                tileSpriteFramesData.forEach((spriteFrameData, key) => {
+                    game.cache.addTextureAtlas(key, '', spriteFrameData.image, spriteFrameData, Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+                });
+        
+                _(tileSprites).each(tileSprite => {
+        
+                    let width = tilewidth,
+                        height = tileheight, spriteInfo = tileSprite[0],
+                        row = Math.floor(spriteInfo.index / 100),
+                        column = spriteInfo.index % 100,
+                        x = Math.min(column * width, 100 * width),
+                        y = Math.min(row * height, 100 * height),
+                        tileset = _(map.map.tilesets).find(t => t.containsTileIndex(spriteInfo.id));
+                    
+                    game.add.sprite(x, y, tileset.name, spriteInfo.id.toString(), this.gamegroup);
+                });
+        
+                layer.renderable = false;
+                */
     };
     Engine.prototype.setActivePlayer = function (entity) {
         this.currentPlayerName.value = entity.name;
     };
     Engine.prototype.createMenu = function () {
-        var game = this.phaserGame, slickUI = this.slickUI, panelVisiblePosition = 8, panelWidth = game.width - 8, openButtonWidth = 50, panelHiddenPosition = openButtonWidth - game.width, panel = new SlickUI.Element.Panel(panelHiddenPosition, game.height - 72, panelWidth, 64), closeButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), openButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), currentPlayerName = new SlickUI.Element.Text(10, 0, "BoyGeorge"), button = new SlickUI.Element.Button(390, 0, 140, 80), panelIsvisible = false;
+        var _this = this;
+        var game = this.phaserGame, slickUI = this.slickUI, panelVisiblePosition = 8, panelWidth = game.width - 8, openButtonWidth = 50, panelHiddenPosition = openButtonWidth - game.width, panel = new SlickUI.Element.Panel(panelHiddenPosition, game.height - 72, panelWidth, 64), closeButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), openButton = new SlickUI.Element.Button(panelWidth - openButtonWidth, 0, openButtonWidth, 80), currentPlayerName = new SlickUI.Element.Text(10, 0, "BoyGeorge"), button = new SlickUI.Element.Button(390, 0, 140, 80);
+        this.panelIsvisible = false;
         slickUI.add(panel);
         panel.add(openButton);
         panel.add(closeButton);
         panel.add(button);
         panel.add(currentPlayerName).centerVertically().text.alpha = 0.5;
         this.currentPlayerName = currentPlayerName;
-        closeButton.events.onInputUp.add(function () { console.log('Clicked button'); });
         closeButton.add(new SlickUI.Element.Text(0, 0, "<<")).center();
         closeButton.visible = false;
         openButton.add(new SlickUI.Element.Text(0, 0, ">>")).center();
+        closeButton.events.onInputUp.add(function () { console.log('Clicked button'); });
         button.events.onInputUp.add(function () { console.log('Clicked button'); });
         button.add(new SlickUI.Element.Text(0, 0, "My button")).center();
         openButton.events.onInputDown.add(function () {
-            if (panelIsvisible) {
+            if (_this.panelIsvisible) {
                 return;
             }
-            panelIsvisible = true;
+            _this.panelIsvisible = true;
             panel.x = panelHiddenPosition;
             openButton.visible = false;
             closeButton.visible = true;
@@ -2170,9 +2307,9 @@ var Engine = (function () {
         }, this);
         closeButton.events.onInputUp.add(function () {
             game.add.tween(panel).to({ x: panelHiddenPosition + 20 }, 500, Phaser.Easing.Exponential.Out, true).onComplete.add(function () {
-                panelIsvisible = false;
                 panel.x = panelHiddenPosition;
             });
+            _this.panelIsvisible = false;
             openButton.visible = true;
             closeButton.visible = false;
         });
@@ -2313,13 +2450,13 @@ var Engine = (function () {
         var delay = this.phaserGame.rnd.integerInRange(0, 50);
         //zombie.animations.add("down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
         __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "down", [zombieType + "-down-1", zombieType + "-down-2", zombieType + "-down-3", zombieType + "-down-2"], framerate, true);
-        zombie.animations.add("left", [zombieType + "-left-1", zombieType + "-left-2", zombieType + "-left-3"], framerate, true);
-        zombie.animations.add("right", [zombieType + "-right-1", zombieType + "-right-2", zombieType + "-right-3"], framerate, true);
-        zombie.animations.add("up", [zombieType + "-up-1", zombieType + "-up-2", zombieType + "-up-3"], framerate, true);
-        zombie.animations.add("masked-down", ["00-down-1", "00-down-2", "00-down-3"], framerate, true);
-        zombie.animations.add("masked-left", ["00-left-1", "00-left-2", "00-left-3"], framerate, true);
-        zombie.animations.add("masked-right", ["00-right-1", "00-right-2", "00-right-3"], framerate, true);
-        zombie.animations.add("masked-up", ["00-up-1", "00-up-2", "00-up-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "left", [zombieType + "-left-1", zombieType + "-left-2", zombieType + "-left-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "right", [zombieType + "-right-1", zombieType + "-right-2", zombieType + "-right-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "up", [zombieType + "-up-1", zombieType + "-up-2", zombieType + "-up-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "masked-down", ["00-down-1", "00-down-2", "00-down-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "masked-left", ["00-left-1", "00-left-2", "00-left-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "masked-right", ["00-right-1", "00-right-2", "00-right-3"], framerate, true);
+        __WEBPACK_IMPORTED_MODULE_3_app_phaser_delayedAnimation__["a" /* default */].addToAnimations(zombie.animations, delay, "masked-up", ["00-up-1", "00-up-2", "00-up-3"], framerate, true);
         zombie.play("down");
         var frameIndex = this.phaserGame.rnd.integerInRange(0, zombie.animations.currentAnim.frameTotal);
         zombie.animations.currentAnim.setFrame(frameIndex);
@@ -2384,8 +2521,18 @@ var Engine = (function () {
     Engine.prototype.addGroup = function (groupName) {
         return this.phaserGame.add.group(this.phaserGame.world, groupName, false, true, Phaser.Physics.ARCADE);
     };
+    Engine.prototype.isOverMenu = function (activePointer) {
+        var game = this.phaserGame;
+        if (this.panelIsvisible) {
+            return activePointer.y > game.height - 72;
+        }
+        return activePointer.y > game.height - 72 && activePointer.x < 50;
+    };
     Engine.prototype.updateCamera = function () {
         var game = this.phaserGame, camera = game.camera, activePointer = game.input.activePointer, cameraPosition = camera.position, livezone = 32, cameraStep = 16;
+        if (this.isOverMenu(activePointer)) {
+            return;
+        }
         if (activePointer.x <= livezone) {
             this.phaserGame.camera.setPosition(cameraPosition.x - cameraStep, cameraPosition.y);
         }
@@ -2417,6 +2564,9 @@ var Engine = (function () {
     };
     Engine.prototype.setMarker = function () {
         var marker = this.marker, tilePointBelowPointer = this.pointToTilePosition(); // get tile coordinate below activePointer
+        if (this.isOverMenu(this.phaserGame.input.activePointer)) {
+            return;
+        }
         if (this.isPositionCollidable(tilePointBelowPointer)) {
         }
         else {
@@ -2491,14 +2641,138 @@ var Engine = (function () {
         }
     };
     Engine.prototype.update = function () {
-        this.setMarker();
         this.updateCamera();
         this.handlerKeyBoard();
         this.gamegroup.sort('y', Phaser.Group.SORT_ASCENDING);
+        //this.gamegroup.children.forEach(sprite => this.phaserGame.debug.spriteBounds(sprite))
     };
     return Engine;
 }());
 //# sourceMappingURL=D:/dev/_game_01-06/src/engine.js.map
+
+/***/ }),
+
+/***/ 419:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(78);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return LayerToSprites; });
+
+var LayerToSprites = (function () {
+    function LayerToSprites() {
+    }
+    LayerToSprites.prototype.placeMapSprite = function (layer, map, tilemapJson, group, game) {
+        var spriteData = __WEBPACK_IMPORTED_MODULE_0_lodash__(tilemapJson.layers).find(function (l) { return l.name == 'sprites'; }), spritesInfo = __WEBPACK_IMPORTED_MODULE_0_lodash__(spriteData.data)
+            .map(function (x, index) {
+            return x > 0 ? { index: index, id: x } : null;
+        })
+            .filter(function (x) { return x; }).value();
+        var tilewidth = map.tileWidth, tileheight = map.tileHeight, w = layer.width, h = layer.height, tileSprites = new Array();
+        var rightTileIsSameGroup = function (tileset, spriteInfo) {
+            return spriteData.data[spriteInfo.index + 1] == spriteInfo.id + 1;
+        };
+        var bottomTileIsSameGroup = function (tileset, spriteInfo) {
+            return spriteData.data[spriteInfo.index + 100] == spriteInfo.id + tileset.columns;
+        };
+        var processedTiles = {}, tileSpriteFramesData = new Map();
+        var _loop_1 = function() {
+            var id = spriteData.data[index];
+            if (id == 0 || processedTiles[index]) {
+                return "continue";
+            }
+            var spriteInfo = {
+                index: index,
+                id: id
+            };
+            // layerSprites
+            var row = Math.floor(spriteInfo.index / 100), column = spriteInfo.index % 100;
+            var currentLayerSprite = new Array();
+            //currentLayerSprite.push(spriteInfo);
+            //checkIfTilesAround
+            var tilesRightId = spriteInfo.index, tilesBottomId = spriteInfo.index;
+            var tileset = __WEBPACK_IMPORTED_MODULE_0_lodash__(map.tilesets).find(function (t) { return t.containsTileIndex(spriteInfo.id); });
+            var currentSpriteInfo = spriteInfo;
+            //currentLayerSprite.push(currentSpriteInfo);
+            var continueReadingRight = true, continueReadingBottom = true, spritewidth = 0, spriteheight = 0;
+            while (continueReadingRight) {
+                spritewidth++;
+                var bottomSpriteInfo = {
+                    index: currentSpriteInfo.index,
+                    id: spriteData.data[currentSpriteInfo.index]
+                };
+                continueReadingBottom = bottomTileIsSameGroup(tileset, bottomSpriteInfo);
+                var currentspriteheight = 0;
+                while (continueReadingBottom) {
+                    currentspriteheight++;
+                    currentLayerSprite.push(bottomSpriteInfo);
+                    processedTiles[bottomSpriteInfo.index] = true;
+                    continueReadingBottom = bottomTileIsSameGroup(tileset, bottomSpriteInfo);
+                    bottomSpriteInfo = {
+                        index: bottomSpriteInfo.index + 100,
+                        id: spriteData.data[bottomSpriteInfo.index + 100]
+                    };
+                }
+                if (currentspriteheight > spriteheight) {
+                    spriteheight = currentspriteheight;
+                }
+                continueReadingRight = rightTileIsSameGroup(tileset, currentSpriteInfo);
+                currentSpriteInfo = {
+                    index: currentSpriteInfo.index + 1,
+                    id: spriteData.data[currentSpriteInfo.index + 1]
+                };
+            }
+            if (currentLayerSprite.length) {
+                var tilesetRaw = tileset, currentgid = currentLayerSprite[0].id - tileset.firstgid, tilex = tilesetRaw.drawCoords[currentgid * 2], tiley = tilesetRaw.drawCoords[1 + (currentgid * 2)], spritewidthPixel = spritewidth * tilewidth, spriteHeightPixel = spriteheight * tileheight, spriteFrameAtlas = {
+                    filename: currentLayerSprite[0].id.toString(),
+                    frame: {
+                        x: tilex,
+                        y: tiley,
+                        w: spritewidthPixel,
+                        h: spriteHeightPixel
+                    },
+                    rotated: false,
+                    trimmed: false,
+                    spriteSourceSize: {
+                        x: tilex,
+                        y: tiley,
+                        w: spritewidthPixel,
+                        h: spriteHeightPixel
+                    },
+                    sourceSize: {
+                        w: spritewidthPixel,
+                        h: spriteHeightPixel
+                    }
+                };
+                if (!tileSpriteFramesData.has(tileset.name)) {
+                    var newFrameAtlas = {
+                        frames: new Array(),
+                        image: tileset.image
+                    };
+                    tileSpriteFramesData.set(tileset.name, newFrameAtlas);
+                }
+                tileSpriteFramesData
+                    .get(tileset.name)
+                    .frames.push(spriteFrameAtlas);
+                tileSprites.push(currentLayerSprite);
+            }
+        };
+        for (var index = 0; index < spriteData.data.length; index++) {
+            _loop_1();
+        }
+        tileSpriteFramesData.forEach(function (spriteFrameData, key) {
+            game.cache.addTextureAtlas(key, '', spriteFrameData.image, spriteFrameData, Phaser.Loader.TEXTURE_ATLAS_JSON_HASH);
+        });
+        __WEBPACK_IMPORTED_MODULE_0_lodash__(tileSprites).each(function (tileSprite) {
+            var width = tilewidth, height = tileheight, spriteInfo = tileSprite[0], row = Math.floor(spriteInfo.index / 100), column = spriteInfo.index % 100, x = Math.min(column * width, 100 * width), y = Math.min(row * height, 100 * height), tileset = __WEBPACK_IMPORTED_MODULE_0_lodash__(map.tilesets).find(function (t) { return t.containsTileIndex(spriteInfo.id); });
+            game.add.sprite(x, y, tileset.name, spriteInfo.id.toString(), group);
+        });
+        layer.renderable = false;
+    };
+    return LayerToSprites;
+}());
+//# sourceMappingURL=D:/dev/_game_01-06/src/layerToSprites.js.map
 
 /***/ }),
 
@@ -2617,7 +2891,7 @@ module.exports = "<div style=\"position: relative\">\n    <div id=\"game\" class
 /***/ 498:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(297);
+module.exports = __webpack_require__(295);
 
 
 /***/ })
